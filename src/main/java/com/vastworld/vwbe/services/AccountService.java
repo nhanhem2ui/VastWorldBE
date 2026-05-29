@@ -1,5 +1,6 @@
 package com.vastworld.vwbe.services;
 
+import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.entites.Account;
 import com.vastworld.vwbe.repositories.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,15 @@ public class AccountService {
         this.accountRepository = accountRepository;
     }
 
-    public List<Account> GetAllAccounts() {
-        return accountRepository.findAll();
+    public ServiceResult<List<Account>> GetAllAccounts() {
+        try {
+            var data = accountRepository.findAll();
+            if (!data.isEmpty()) {
+                return ServiceResult.success("Account retrieving successfully", data);
+            }
+            return ServiceResult.failure("No accounts in system");
+        } catch (Exception e) {
+            return ServiceResult.failure("Error retrieving accounts", e);
+        }
     }
-
 }

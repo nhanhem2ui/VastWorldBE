@@ -14,6 +14,14 @@ public class Common {
             return HttpStatus.NOT_FOUND;
         }
 
+        if (message.contains("banned")) {
+            return HttpStatus.FORBIDDEN;
+        }
+
+        if (message.contains("credentials")) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+
         if (message.contains("already exists") || message.contains("invalid") || message.contains("required")) {
             return HttpStatus.BAD_REQUEST;
         }
