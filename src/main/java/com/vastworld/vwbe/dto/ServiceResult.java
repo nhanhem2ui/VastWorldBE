@@ -28,6 +28,14 @@ public class ServiceResult<T> {
         return result;
     }
 
+    public static <T> ServiceResult<T> success(String message) {
+        ServiceResult<T> result = new ServiceResult<>();
+        result.setSuccess(true);
+        result.setMessage(message);
+        result.setData(null);
+        return result;
+    }
+
     public static <T> ServiceResult<T> failure(String message) {
         ServiceResult<T> result = new ServiceResult<>();
         result.setSuccess(false);
