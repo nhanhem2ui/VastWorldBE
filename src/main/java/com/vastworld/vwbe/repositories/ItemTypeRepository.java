@@ -4,4 +4,6 @@ import com.vastworld.vwbe.entites.ItemType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ItemTypeRepository extends JpaRepository<ItemType, Integer> {
+    boolean existsByNameIgnoreCase(String name);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Integer id);
 }
