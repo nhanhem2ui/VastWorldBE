@@ -4,6 +4,7 @@ import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
 import com.vastworld.vwbe.entites.CultivationRealm;
 import com.vastworld.vwbe.repositories.CultivationRealmRepository;
+import jakarta.servlet.ServletContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,34 +25,16 @@ public class CultivationRealmService {
             var cultivationRealmList = cultivationRealmRepository.findAll();
 
             if (cultivationRealmList.isEmpty()) {
-                ServiceResult<List<CultivationRealmDTO>> result = new ServiceResult<>();
-                result.setSuccess(true);
-                result.setMessage("No cultivation realm found");
-                result.setData(Collections.emptyList());
-                return result;
+                return ServiceResult.failure("No cultivation realm found");
             }
 
             var dtoList = cultivationRealmList.stream()
-                    .map(n -> new CultivationRealmDTO(
-                            n.getId(),
-                            n.getName(),
-                            n.getRealmOrder(),
-                            n.getIsImmortal() != null ? n.getIsImmortal() : false
-                    ))
+                    .map(this::toDto)
                     .toList();
 
-            ServiceResult<List<CultivationRealmDTO>> result = new ServiceResult<>();
-            result.setSuccess(true);
-            result.setMessage("Cultivation realm retrieved successfully");
-            result.setData(dtoList);
-            return result;
-        }
-        catch (Exception ex) {
-            ServiceResult<List<CultivationRealmDTO>> result = new ServiceResult<>();
-            result.setSuccess(false);
-            result.setMessage("Error retrieving cultivation realm");
-            result.setErrors(Collections.singletonList(ex.getMessage()));
-            return result;
+            return ServiceResult.success("Cultivation realm retrieved successfully", dtoList);
+        } catch (Exception ex) {
+            return ServiceResult.failure("Error retrieving cultivation realm", ex);
         }
     }
 
@@ -62,12 +45,12 @@ public class CultivationRealmService {
             }
 
             var cultivationRealm = cultivationRealmRepository.findById(id);
-            if (cultivationRealm.isEmpty())
-                return ServiceResult.failure("Cultivation realm not found");
-            else
+            if (cultivationRealm.isPresent()) {
                 return ServiceResult.success("Cultivation realm retrieved successfully", toDto(cultivationRealm.get()));
-        }
-        catch (Exception ex) {
+            } else {
+                return ServiceResult.failure("Cultivation realm not found");
+            }
+        } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving cultivation realm", ex);
         }
     }
@@ -89,9 +72,9 @@ public class CultivationRealmService {
             cultivationRealm.setIsImmortal(Boolean.TRUE.equals(dto.isImmortal()));
 
             var savedCultivationRealm = cultivationRealmRepository.save(cultivationRealm);
+
             return ServiceResult.success("Cultivation realm created successfully", toDto(savedCultivationRealm));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error creating cultivation realm", ex);
         }
     }
@@ -123,8 +106,7 @@ public class CultivationRealmService {
 
             var updatedCultivationRealm = cultivationRealmRepository.save(cultivationRealm);
             return ServiceResult.success("Cultivation realm updated successfully", toDto(updatedCultivationRealm));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error updating cultivation realm", ex);
         }
     }
@@ -141,12 +123,8 @@ public class CultivationRealmService {
 
             cultivationRealmRepository.deleteById(id);
 
-            ServiceResult<Void> result = new ServiceResult<>();
-            result.setSuccess(true);
-            result.setMessage("Cultivation realm deleted successfully");
-            return result;
-        }
-        catch (Exception ex) {
+            return ServiceResult.success("Cultivation realm deleted successfully");
+        } catch (Exception ex) {
             return ServiceResult.failure("Error deleting cultivation realm", ex);
         }
     }

@@ -24,29 +24,20 @@ public class RealmStageService {
             var realmStageList = realmStageRepository.findAll();
 
             if (realmStageList.isEmpty()) {
-                ServiceResult<List<RealmStageDTO>> result = new ServiceResult<>();
-                result.setSuccess(true);
-                result.setMessage("No realm stage found");
-                result.setData(Collections.emptyList());
-                return result;
+                return ServiceResult.failure("No realm stage found");
             }
 
             var dtoList = realmStageList.stream()
                     .map(this::toDto)
                     .toList();
 
-            ServiceResult<List<RealmStageDTO>> result = new ServiceResult<>();
-            result.setSuccess(true);
-            result.setMessage("Realm stage retrieved successfully");
-            result.setData(dtoList);
-            return result;
-        }
-        catch (Exception ex) {
+            return ServiceResult.success("Realm stage retrieved successfully", dtoList);
+        } catch (Exception ex) {
             ServiceResult<List<RealmStageDTO>> result = new ServiceResult<>();
             result.setSuccess(false);
             result.setMessage("Error retrieving realm stage");
             result.setErrors(Collections.singletonList(ex.getMessage()));
-            return result;
+            return ServiceResult.failure("Error retrieving realm stage",ex);
         }
     }
 
@@ -60,10 +51,8 @@ public class RealmStageService {
             if (realmStage.isEmpty()) {
                 return ServiceResult.failure("Realm stage not found");
             }
-
             return ServiceResult.success("Realm stage retrieved successfully", toDto(realmStage.get()));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving realm stage", ex);
         }
     }
@@ -89,8 +78,7 @@ public class RealmStageService {
 
             var savedRealmStage = realmStageRepository.save(realmStage);
             return ServiceResult.success("Realm stage created successfully", toDto(savedRealmStage));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error creating realm stage", ex);
         }
     }
@@ -125,8 +113,7 @@ public class RealmStageService {
 
             var updatedRealmStage = realmStageRepository.save(realmStage);
             return ServiceResult.success("Realm stage updated successfully", toDto(updatedRealmStage));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error updating realm stage", ex);
         }
     }
@@ -147,8 +134,7 @@ public class RealmStageService {
             result.setSuccess(true);
             result.setMessage("Realm stage deleted successfully");
             return result;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return ServiceResult.failure("Error deleting realm stage", ex);
         }
     }
