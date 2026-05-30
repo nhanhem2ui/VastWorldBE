@@ -1,0 +1,61 @@
+package com.vastworld.vwbe.controllers;
+
+import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.playerequipment.PlayerEquipmentDTO;
+import com.vastworld.vwbe.services.PlayerEquipmentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import static com.vastworld.vwbe.common.Common.resolveStatus;
+
+@RestController
+@RequestMapping("/api/player-equipments")
+public class PlayerEquipmentController {
+    private final PlayerEquipmentService playerEquipmentService;
+
+    public PlayerEquipmentController(PlayerEquipmentService playerEquipmentService) {
+        this.playerEquipmentService = playerEquipmentService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ServiceResult<List<PlayerEquipmentDTO>>> getAllPlayerEquipments() {
+        var result = playerEquipmentService.getAllPlayerEquipments();
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ServiceResult<PlayerEquipmentDTO>> getPlayerEquipmentById(@PathVariable Long id) {
+        var result = playerEquipmentService.getPlayerEquipmentById(id);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @PostMapping
+    public ResponseEntity<ServiceResult<PlayerEquipmentDTO>> createPlayerEquipment(@RequestBody PlayerEquipmentDTO dto) {
+        var result = playerEquipmentService.createPlayerEquipment(dto);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ServiceResult<PlayerEquipmentDTO>> updatePlayerEquipment(
+            @PathVariable Long id,
+            @RequestBody PlayerEquipmentDTO dto) {
+        var result = playerEquipmentService.updatePlayerEquipment(id, dto);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ServiceResult<Void>> deletePlayerEquipment(@PathVariable Long id) {
+        var result = playerEquipmentService.deletePlayerEquipment(id);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+}
