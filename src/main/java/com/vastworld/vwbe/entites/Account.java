@@ -42,6 +42,12 @@ public class Account {
     @Column(name = "EmailVerified", nullable = false)
     private Boolean emailVerified = false;
 
+    @Column(name ="EmailVerificationToken",unique = true)
+    private String emailVerificationToken;
+
+    @Column(name = "EmailVerificationExpiry")
+    private LocalDateTime emailVerificationExpiry;
+
     @Column(name = "IsBanned", nullable = false)
     private Boolean isBanned = false;
 
