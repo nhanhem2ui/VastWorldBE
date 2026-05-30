@@ -25,6 +25,7 @@ public class JwtService {
                 .subject(account.getId().toString())
                 .claim("email", account.getEmail())
                 .claim("username", account.getUsername())
+                .claim("role", account.getRole())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
@@ -38,5 +39,13 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+    public String extractRole(String token) {
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
     }
 }
