@@ -2,10 +2,13 @@ package com.vastworld.vwbe.services;
 
 import com.vastworld.vwbe.common.RoleConstants;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.account.MeResponse;
 import com.vastworld.vwbe.dto.auth.*;
 import com.vastworld.vwbe.entites.Account;
 import com.vastworld.vwbe.repositories.AccountRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -175,5 +179,33 @@ public class AuthService {
         } catch (Exception ex) {
             return ServiceResult.failure("Invalid token", ex);
         }
+    }
+    public ServiceResult<MeResponse> Me(HttpServletRequest request){
+        // Principal is already populated by JwtAuthenticationFilter
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return  ServiceResult.failure("Invalid credentials");
+        }
+
+        // subject is the account UUID (set in JwtService.generateToken)
+        String userId = (String) auth.getPrincipal();
+        String role = auth.getAuthorities().stream()
+                .findFirst()
+                .map(a -> Objects.requireNonNull(a.getAuthority()).replace("ROLE_", ""))
+                .orElse(null);
+
+        var account = accountRepository.findById(UUID.fromString(userId));
+        if (account.isEmpty()) {
+            return ServiceResult.failure("Account not found");
+        }
+
+        var data = new MeResponse(
+                userId,
+                account.get().getUsername(),
+                account.get().getEmail(),
+                role
+        );
+        return ServiceResult.success("OK", data);
     }
 }
