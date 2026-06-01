@@ -129,7 +129,7 @@ public class AuthService {
                 return ServiceResult.failure("Invalid credentials");
 
             String token = jwtService.generateToken(account);
-            var data = new AuthResponse(token, jwtExpiration, account.getUsername(), account.getEmail());
+            var data = new AuthResponse(token, jwtExpiration, account.getUsername(), account.getEmail(), account.getRole());
             return ServiceResult.success("Login successfully", data);
         }
         catch (Exception ex){
