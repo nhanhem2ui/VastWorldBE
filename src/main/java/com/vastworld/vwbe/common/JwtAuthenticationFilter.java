@@ -25,33 +25,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        String token = extractFromHeader(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        if (token == null) {
+            token = extractFromCookie(request);
         }
 
-        String token = authHeader.substring(7);
+        if (token != null) {
+            try {
+                String subject = jwtService.extractSubject(token);
+                String role = jwtService.extractRole(token);
 
-        try {
-            String subject = jwtService.extractSubject(token);
-            String role = jwtService.extractRole(token);
-
-            if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-                var authentication = new UsernamePasswordAuthenticationToken(subject, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                    var authentication = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (Exception e) {
+                // Invalid token — don't set authentication; let security chain handle it
             }
-        } catch (Exception e) {
-            // Invalid token — don't set authentication; let security chain handle it
         }
-
         filterChain.doFilter(request, response);
+    }
+    private String extractFromHeader(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    private String extractFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

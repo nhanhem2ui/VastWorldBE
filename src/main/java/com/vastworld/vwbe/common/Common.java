@@ -18,7 +18,7 @@ public class Common {
             return HttpStatus.FORBIDDEN;
         }
 
-        if (message.contains("credentials")) {
+        if (message.contains("credentials") || message.contains("not authenticated") || message.contains("unauthenticated")) {
             return HttpStatus.UNAUTHORIZED;
         }
 
