@@ -1,41 +1,55 @@
 package com.vastworld.vwbe.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
 import com.vastworld.vwbe.entites.CultivationRealm;
 import com.vastworld.vwbe.repositories.CultivationRealmRepository;
-import jakarta.servlet.ServletContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @Transactional
 public class CultivationRealmService {
     private final CultivationRealmRepository cultivationRealmRepository;
+    private final RedisService redisService;
 
-    public CultivationRealmService(CultivationRealmRepository cultivationRealmRepository) {
+    public CultivationRealmService(CultivationRealmRepository cultivationRealmRepository, RedisService redisService) {
         this.cultivationRealmRepository = cultivationRealmRepository;
+        this.redisService = redisService;
     }
 
     public ServiceResult<List<CultivationRealmDTO>> getAllCultivationRealms() {
-        try {
-            var cultivationRealmList = cultivationRealmRepository.findAll();
 
-            if (cultivationRealmList.isEmpty()) {
+        try {
+            String cacheKey = "cultivation-realms:all";
+
+            var cached = redisService.get(cacheKey, new TypeReference<List<CultivationRealmDTO>>() {});
+
+            if(cached != null){
+                return ServiceResult.success("Cultivation realm retrieved successfully", cached);
+            }
+
+            var cultivationRealmList =
+                    cultivationRealmRepository.findAll();
+
+            if(cultivationRealmList.isEmpty()){
                 return ServiceResult.failure("No cultivation realm found");
             }
 
             var dtoList = cultivationRealmList.stream()
-                    .map(this::toDto)
-                    .toList();
+                            .map(this::toDto)
+                            .toList();
+            redisService.set(cacheKey, dtoList);
 
             return ServiceResult.success("Cultivation realm retrieved successfully", dtoList);
-        } catch (Exception ex) {
+        }
+        catch(Exception ex){
             return ServiceResult.failure("Error retrieving cultivation realm", ex);
         }
+
     }
 
     public ServiceResult<CultivationRealmDTO> getCultivationRealmById(Integer id) {

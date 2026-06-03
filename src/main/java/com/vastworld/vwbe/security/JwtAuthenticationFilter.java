@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.common;
+package com.vastworld.vwbe.security;
 
 import com.vastworld.vwbe.services.JwtService;
 import jakarta.servlet.FilterChain;
