@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.common;
+package com.vastworld.vwbe.security;
 
 import lombok.Getter;
 import lombok.Setter;
