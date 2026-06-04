@@ -10,6 +10,8 @@ public record PlayerDTO(
         String accountEmail,
         Integer realmId,
         String realmName,
+        Boolean gender,
+        Integer rollNum,
         Integer realmStage,
         String realmStageName,
         Long hp,

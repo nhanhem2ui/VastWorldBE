@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.naming.Name;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,6 +25,12 @@ public class Player {
 
     @Column(name = "RealmId", nullable = false)
     private Integer realmId;
+
+    @Column(name = "Gender")
+    private Boolean gender;
+
+    @Column(name = "RollNum")
+    private Integer rollNum = 5;
 
     @Column(name = "RealmStage", nullable = false)
     private Integer realmStage;

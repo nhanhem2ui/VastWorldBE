@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.services;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.entites.Account;
 import com.vastworld.vwbe.entites.Player;
@@ -22,11 +23,8 @@ public class PlayerService {
     private final CultivationRealmRepository cultivationRealmRepository;
     private final RealmStageRepository realmStageRepository;
 
-    public PlayerService(
-            PlayerRepository playerRepository,
-            AccountRepository accountRepository,
-            CultivationRealmRepository cultivationRealmRepository,
-            RealmStageRepository realmStageRepository) {
+    public PlayerService(PlayerRepository playerRepository, AccountRepository accountRepository,
+            CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository) {
         this.playerRepository = playerRepository;
         this.accountRepository = accountRepository;
         this.cultivationRealmRepository = cultivationRealmRepository;
@@ -91,6 +89,34 @@ public class PlayerService {
         }
     }
 
+    public ServiceResult<PlayerDTO> createNewPlayable(NewPlayableDTO dto) {
+        try {
+            if (dto == null) {
+                return ServiceResult.failure("Playable character data is required");
+            }
+
+            if (dto.accountId() == null) {
+                return ServiceResult.failure("Account id is invalid");
+            }
+
+            var account = accountRepository.findById(dto.accountId());
+            if (account.isEmpty()) {
+                return ServiceResult.failure("Account not found");
+            }
+
+            var player = new Player();
+            player.setAccount(account.get());
+            player.setGender(dto.gender());
+            player.setRealmId(1);
+            player.setRealmStage(1);
+
+            var savedPlayer = playerRepository.save(player);
+            return ServiceResult.success("Playable character created successfully", toDto(savedPlayer));
+        } catch (Exception ex) {
+            return ServiceResult.failure("Error creating playable character", ex);
+        }
+    }
+
     public ServiceResult<PlayerDTO> updatePlayer(UUID id, PlayerDTO dto) {
         try {
             if (id == null) {
@@ -142,6 +168,8 @@ public class PlayerService {
 
     private void applyDto(Player player, PlayerDTO dto) {
         player.setRealmId(dto.realmId());
+        player.setGender(dto.gender());
+        player.setRollNum(defaultInteger(dto.rollNum(), 5));
         player.setRealmStage(dto.realmStage());
         player.setHp(defaultLong(dto.hp(), 100L));
         player.setAttack(defaultLong(dto.attack(), 10L));
@@ -168,6 +196,8 @@ public class PlayerService {
                 account.getEmail(),
                 player.getRealmId(),
                 realm != null ? realm.getName() : null,
+                player.getGender(),
+                player.getRollNum(),
                 player.getRealmStage(),
                 realmStage != null ? realmStage.getStageName() : null,
                 player.getHp(),
@@ -212,7 +242,8 @@ public class PlayerService {
                 || isNegative(dto.cultivationSpeed())
                 || isNegative(dto.cultivationPoint())
                 || isNegative(dto.reputation())
-                || isNegative(dto.spiritStone())) {
+                || isNegative(dto.spiritStone())
+                || isNegative(dto.rollNum())) {
             return ServiceResult.failure("Player stats must be greater than or equal to 0");
         }
 
@@ -241,6 +272,10 @@ public class PlayerService {
     }
 
     private Double defaultDouble(Double value, Double defaultValue) {
+        return value != null ? value : defaultValue;
+    }
+
+    private Integer defaultInteger(Integer value, Integer defaultValue) {
         return value != null ? value : defaultValue;
     }
 

@@ -1,10 +1,12 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.services.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +23,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 
 @RestController
 @RequestMapping("/api/players")
+@PreAuthorize("isAuthenticated()")
 public class PlayerController {
     private final PlayerService playerService;
 
@@ -29,24 +32,34 @@ public class PlayerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<List<PlayerDTO>>> getAllPlayers() {
         var result = playerService.getAllPlayers();
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<PlayerDTO>> getPlayerById(@PathVariable UUID id) {
         var result = playerService.getPlayerById(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<PlayerDTO>> createPlayer(@RequestBody PlayerDTO dto) {
         var result = playerService.createPlayer(dto);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
     }
 
+    @PostMapping("/playable")
+    public ResponseEntity<ServiceResult<PlayerDTO>> createNewPlayable(@RequestBody NewPlayableDTO dto) {
+        var result = playerService.createNewPlayable(dto);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<PlayerDTO>> updatePlayer(
             @PathVariable UUID id,
             @RequestBody PlayerDTO dto) {
@@ -55,6 +68,7 @@ public class PlayerController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<Void>> deletePlayer(@PathVariable UUID id) {
         var result = playerService.deletePlayer(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
