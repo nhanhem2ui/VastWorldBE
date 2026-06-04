@@ -1,6 +1,8 @@
 package com.vastworld.vwbe.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
 import com.vastworld.vwbe.dto.spiritroot.SpiritRootDTO;
 import com.vastworld.vwbe.entites.SpiritRoot;
 import com.vastworld.vwbe.repositories.SpiritRootRepository;
@@ -13,13 +15,23 @@ import java.util.List;
 @Transactional
 public class SpiritRootService {
     private final SpiritRootRepository spiritRootRepository;
+    private final RedisService redisService;
 
-    public SpiritRootService(SpiritRootRepository spiritRootRepository) {
+    public SpiritRootService(SpiritRootRepository spiritRootRepository, RedisService redisService) {
         this.spiritRootRepository = spiritRootRepository;
+        this.redisService = redisService;
     }
 
     public ServiceResult<List<SpiritRootDTO>> getAllSpiritRoots() {
         try {
+            String cacheKey = "spirit-roots:all";
+
+            var cached = redisService.get(cacheKey, new TypeReference<List<SpiritRootDTO>>() {});
+
+            if(cached != null){
+                return ServiceResult.success("Spirit root retrieved successfully", cached);
+            }
+
             var spiritRootList = spiritRootRepository.findAll();
             if (spiritRootList.isEmpty()) {
                 return ServiceResult.failure("No spirit root found");

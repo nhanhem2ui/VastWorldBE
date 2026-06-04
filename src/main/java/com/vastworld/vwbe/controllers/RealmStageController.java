@@ -5,6 +5,7 @@ import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
 import com.vastworld.vwbe.services.RealmStageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 
 @RestController
 @RequestMapping("/api/realm-stages")
+@PreAuthorize("isAuthenticated()")
 public class RealmStageController {
     private final RealmStageService realmStageService;
 
