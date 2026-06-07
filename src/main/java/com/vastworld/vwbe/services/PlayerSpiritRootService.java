@@ -238,7 +238,6 @@ public class PlayerSpiritRootService {
 
     private PlayerSpiritRootDTO toDto(PlayerSpiritRoot playerSpiritRoot) {
         return new PlayerSpiritRootDTO(
-                playerSpiritRoot.getId(),
                 playerSpiritRoot.getPlayer().getId(),
                 playerSpiritRoot.getSpiritRoot().getId(),
                 playerSpiritRoot.getSpiritRoot().getName()
