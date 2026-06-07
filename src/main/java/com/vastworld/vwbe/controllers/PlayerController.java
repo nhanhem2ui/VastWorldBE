@@ -39,7 +39,6 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<PlayerDTO>> getPlayerById(@PathVariable UUID id) {
         var result = playerService.getPlayerById(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
@@ -59,7 +58,6 @@ public class PlayerController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ServiceResult<PlayerDTO>> updatePlayer(
             @PathVariable UUID id,
             @RequestBody PlayerDTO dto) {
