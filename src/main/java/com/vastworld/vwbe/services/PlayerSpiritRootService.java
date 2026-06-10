@@ -49,18 +49,22 @@ public class PlayerSpiritRootService {
         }
     }
 
-    public ServiceResult<PlayerSpiritRootDTO> getPlayerSpiritRootById(Integer id) {
+    public ServiceResult<List<String>> getPlayerSpiritRootById(UUID playerId) {
         try {
-            if (id == null || id <= 0) {
+            if (playerId == null) {
                 return ServiceResult.failure("Player spirit root id is invalid");
             }
 
-            var playerSpiritRoot = playerSpiritRootRepository.findById(id);
-            if (playerSpiritRoot.isEmpty()) {
+            var playerSpiritRoots = playerSpiritRootRepository.findByPlayer_Id(playerId);
+            if (playerSpiritRoots.isEmpty()) {
                 return ServiceResult.failure("Player spirit root not found");
             }
 
-            return ServiceResult.success("Player spirit root retrieved successfully", toDto(playerSpiritRoot.get()));
+            var data = playerSpiritRoots.stream()
+                    .map(spiritRoot -> spiritRoot.getSpiritRoot().getName())
+                    .toList();
+
+            return ServiceResult.success("Player spirit root retrieved successfully", data);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player spirit root", ex);
         }

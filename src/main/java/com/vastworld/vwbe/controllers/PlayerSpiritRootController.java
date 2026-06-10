@@ -39,7 +39,7 @@ public class PlayerSpiritRootController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceResult<PlayerSpiritRootDTO>> getPlayerSpiritRootById(@PathVariable Integer id) {
+    public ResponseEntity<ServiceResult<List<String>>> getPlayerSpiritRootById(@PathVariable UUID id) {
         var result = playerSpiritRootService.getPlayerSpiritRootById(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
