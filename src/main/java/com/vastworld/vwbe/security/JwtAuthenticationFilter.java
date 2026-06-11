@@ -25,8 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,@NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
@@ -62,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String extractFromCookie(HttpServletRequest request) {
         if (request.getCookies() == null) return null;
-        for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+        for (var cookie : request.getCookies()) {
             if ("accessToken".equals(cookie.getName())) {
                 return cookie.getValue();
             }

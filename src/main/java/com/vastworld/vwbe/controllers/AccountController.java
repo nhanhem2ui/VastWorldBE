@@ -2,6 +2,7 @@ package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.account.AccountDTO;
+import com.vastworld.vwbe.security.RateLimit;
 import com.vastworld.vwbe.services.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/accounts")
 @PreAuthorize("hasRole('ADMIN')")
+@RateLimit(limit = 20)
 public class AccountController {
     private final AccountService accountService;
 
