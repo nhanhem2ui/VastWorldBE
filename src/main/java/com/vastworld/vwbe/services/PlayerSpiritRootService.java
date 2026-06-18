@@ -1,5 +1,7 @@
 package com.vastworld.vwbe.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.playerspiritroot.PlayerSpiritRootDTO;
 import com.vastworld.vwbe.dto.playerspiritroot.RollSpiritRootDTO;
@@ -25,11 +27,13 @@ public class PlayerSpiritRootService {
     private final PlayerRepository playerRepository;
     private final SpiritRootRepository spiritRootRepository;
     private final Random random = new Random();
+    private final RedisService redisService;
 
-    public PlayerSpiritRootService(PlayerSpiritRootRepository playerSpiritRootRepository, PlayerRepository playerRepository, SpiritRootRepository spiritRootRepository) {
+    public PlayerSpiritRootService(PlayerSpiritRootRepository playerSpiritRootRepository, PlayerRepository playerRepository, SpiritRootRepository spiritRootRepository, RedisService redisService) {
         this.playerSpiritRootRepository = playerSpiritRootRepository;
         this.playerRepository = playerRepository;
         this.spiritRootRepository = spiritRootRepository;
+        this.redisService = redisService;
     }
 
     public ServiceResult<List<PlayerSpiritRootDTO>> getAllPlayerSpiritRoots() {
@@ -55,6 +59,9 @@ public class PlayerSpiritRootService {
                 return ServiceResult.failure("Player spirit root id is invalid");
             }
 
+            var cacheKey = CacheKeys.playerSpiritRoots(playerId);
+//            var cached = redisService.get(cacheKey, TypeReference<>)
+
             var playerSpiritRoots = playerSpiritRootRepository.findByPlayer_Id(playerId);
             if (playerSpiritRoots.isEmpty()) {
                 return ServiceResult.failure("Player spirit root not found");
@@ -62,6 +69,30 @@ public class PlayerSpiritRootService {
 
             var data = playerSpiritRoots.stream()
                     .map(spiritRoot -> spiritRoot.getSpiritRoot().getName())
+                    .toList();
+            redisService.set(cacheKey, data);
+            return ServiceResult.success("Player spirit root retrieved successfully", data);
+        } catch (Exception ex) {
+            return ServiceResult.failure("Error retrieving player spirit root", ex);
+        }
+    }
+
+    public ServiceResult<List<PlayerSpiritRootDTO>> getPlayerSpiritRootEntityById(UUID playerId){
+        try {
+            if (playerId == null) {
+                return ServiceResult.failure("Player spirit root id is invalid");
+            }
+
+            var cacheKey = CacheKeys.playerSpiritRoots(playerId);
+//            var cached = redisService.get(cacheKey, TypeReference<>)
+
+            var playerSpiritRoots = playerSpiritRootRepository.findByPlayer_Id(playerId);
+            if (playerSpiritRoots.isEmpty()) {
+                return ServiceResult.failure("Player spirit root not found");
+            }
+
+            var data = playerSpiritRoots.stream()
+                    .map(this::toDto)
                     .toList();
 
             return ServiceResult.success("Player spirit root retrieved successfully", data);
@@ -225,6 +256,7 @@ public class PlayerSpiritRootService {
             return ServiceResult.failure("Error deleting player spirit root", ex);
         }
     }
+
 
     private ServiceResult<PlayerSpiritRootReferences> resolveReferences(PlayerSpiritRootDTO dto) {
         var player = playerRepository.findById(dto.playerId());

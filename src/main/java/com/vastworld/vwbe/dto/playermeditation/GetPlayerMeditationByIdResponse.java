@@ -1,4 +1,11 @@
 package com.vastworld.vwbe.dto.playermeditation;
 
-public class GetPlayerMeditationByIdResponse {
-}
+import java.time.LocalDateTime;
+
+public record GetPlayerMeditationByIdResponse(
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        Long cultivationPerMinute,
+        Long totalCultivationReward,
+        Boolean isClaimed
+){}

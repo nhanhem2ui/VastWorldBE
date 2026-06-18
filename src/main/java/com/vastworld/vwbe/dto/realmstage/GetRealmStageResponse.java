@@ -1,4 +1,3 @@
 package com.vastworld.vwbe.dto.realmstage;
 
-public class GetRealmStageResponse {
-}
+public record GetRealmStageResponse (Integer stageLevel, String stageName){}

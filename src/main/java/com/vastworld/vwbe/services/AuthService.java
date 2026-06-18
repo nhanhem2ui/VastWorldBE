@@ -1,5 +1,6 @@
 package com.vastworld.vwbe.services;
 
+import com.vastworld.vwbe.repositories.PlayerRepository;
 import com.vastworld.vwbe.security.RoleConstants;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.account.MeResponse;
@@ -28,16 +29,18 @@ public class AuthService {
     private final Long jwtExpiration;
     private final EmailService emailService;
     private final String baseUrl;
+    private final PlayerRepository playerRepository;
 
     public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
                        JwtService jwtService, @Value("${jwt.expiration}") Long jwtExpiration,
-                       EmailService emailService, @Value("${app.base-url:http://localhost:8080}") String baseUrl) {
+                       EmailService emailService, @Value("${app.base-url}") String baseUrl, PlayerRepository playerRepository) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtExpiration = jwtExpiration;
         this.emailService = emailService;
         this.baseUrl = baseUrl;
+        this.playerRepository = playerRepository;
     }
 
     public ServiceResult<AuthResponse> register(RegisterRequest request) {
@@ -132,8 +135,12 @@ public class AuthService {
             if (!passwordEncoder.matches(request.password(), account.getPasswordHash()))
                 return ServiceResult.failure("Invalid credentials");
 
+            var playerOptional = playerRepository.findPlayerByAccount_Id(account.getId());
+            var player = playerOptional.orElse(null);
+
             String token = jwtService.generateToken(account);
-            var data = new AuthResponse(account.getId(), token, jwtExpiration, account.getUsername(), account.getEmail(), account.getRole());
+
+            var data = new AuthResponse(account.getId(), player != null ? player.getId() : null, token, jwtExpiration, account.getUsername(), account.getEmail(), account.getRole());
             return ServiceResult.success("Login successfully", data);
         }
         catch (Exception ex){

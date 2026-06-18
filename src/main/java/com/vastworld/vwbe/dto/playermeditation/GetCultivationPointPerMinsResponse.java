@@ -1,4 +1,5 @@
 package com.vastworld.vwbe.dto.playermeditation;
 
-public class GetCultivationPointPerMinutesResponse {
-}
+public record GetCultivationPointPerMinsResponse (
+    Long cultivationPerMinute
+){}

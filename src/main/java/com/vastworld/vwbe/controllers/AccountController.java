@@ -2,7 +2,7 @@ package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.account.AccountDTO;
-import com.vastworld.vwbe.security.RateLimit;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

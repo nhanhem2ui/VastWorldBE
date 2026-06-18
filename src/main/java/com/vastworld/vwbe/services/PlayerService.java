@@ -1,5 +1,7 @@
 package com.vastworld.vwbe.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
@@ -22,13 +24,16 @@ public class PlayerService {
     private final AccountRepository accountRepository;
     private final CultivationRealmRepository cultivationRealmRepository;
     private final RealmStageRepository realmStageRepository;
+    private final RedisService redisService;
 
     public PlayerService(PlayerRepository playerRepository, AccountRepository accountRepository,
-            CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository) {
+            CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository,
+            RedisService redisService) {
         this.playerRepository = playerRepository;
         this.accountRepository = accountRepository;
         this.cultivationRealmRepository = cultivationRealmRepository;
         this.realmStageRepository = realmStageRepository;
+        this.redisService = redisService;
     }
 
     public ServiceResult<List<PlayerDTO>> getAllPlayers() {
@@ -53,6 +58,13 @@ public class PlayerService {
         try {
             if (id == null) {
                 return ServiceResult.failure("Player id is invalid");
+            }
+
+            var cacheKey = CacheKeys.players(id);
+            var cached = redisService.get(cacheKey, new TypeReference<PlayerDTO>() {});
+
+            if (cached != null) {
+                return ServiceResult.success("Player retrieved successfully", cached);
             }
 
             var player = playerRepository.findById(id);
@@ -148,24 +160,6 @@ public class PlayerService {
             return ServiceResult.failure("Error updating player", ex);
         }
     }
-
-    public ServiceResult<Void> deletePlayer(UUID id) {
-        try {
-            if (id == null) {
-                return ServiceResult.failure("Player id is invalid");
-            }
-
-            if (!playerRepository.existsById(id)) {
-                return ServiceResult.failure("Player not found");
-            }
-
-            playerRepository.deleteById(id);
-            return ServiceResult.success("Player deleted successfully");
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error deleting player", ex);
-        }
-    }
-
     private void applyDto(Player player, PlayerDTO dto) {
         player.setRealmId(dto.realmId());
         player.setGender(dto.gender());

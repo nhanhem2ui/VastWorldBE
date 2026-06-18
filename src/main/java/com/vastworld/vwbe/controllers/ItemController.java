@@ -2,6 +2,7 @@ package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.item.ItemDTO;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.ItemService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 
 @RestController
 @RequestMapping("/api/items")
+@RateLimit(limit = 30)
 public class ItemController {
     private final ItemService itemService;
 

@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.security;
+package com.vastworld.vwbe.security.ratelimit;
 
 import com.vastworld.vwbe.services.RedisService;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
 import com.vastworld.vwbe.entites.CultivationRealm;
@@ -24,7 +25,7 @@ public class CultivationRealmService {
     public ServiceResult<List<CultivationRealmDTO>> getAllCultivationRealms() {
 
         try {
-            String cacheKey = "cultivation-realms:all";
+            String cacheKey = CacheKeys.cultivationRealms("all");
 
             var cached = redisService.get(cacheKey, new TypeReference<List<CultivationRealmDTO>>() {});
 
