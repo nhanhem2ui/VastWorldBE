@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
 import com.vastworld.vwbe.dto.spiritroot.SpiritRootDTO;
@@ -24,7 +25,7 @@ public class SpiritRootService {
 
     public ServiceResult<List<SpiritRootDTO>> getAllSpiritRoots() {
         try {
-            String cacheKey = "spirit-roots:all";
+            var cacheKey = CacheKeys.spiritRoots("all");
 
             var cached = redisService.get(cacheKey, new TypeReference<List<SpiritRootDTO>>() {});
 
@@ -53,12 +54,22 @@ public class SpiritRootService {
                 return ServiceResult.failure("Spirit root id is invalid");
             }
 
+            var cacheKey = CacheKeys.spiritRoots(id);
+            var cached = redisService.get(cacheKey, new TypeReference<SpiritRootDTO>(){});
+
+            if(cached != null){
+                return ServiceResult.success("Spirit root retrieved successfully", cached);
+            }
+
             var spiritRoot = spiritRootRepository.findById(id);
             if (spiritRoot.isEmpty()) {
                 return ServiceResult.failure("Spirit root not found");
             }
 
-            return ServiceResult.success("Spirit root retrieved successfully", toDto(spiritRoot.get()));
+            var data = toDto(spiritRoot.get());
+            redisService.set(cacheKey, data);
+
+            return ServiceResult.success("Spirit root retrieved successfully", data);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving spirit root", ex);
         }

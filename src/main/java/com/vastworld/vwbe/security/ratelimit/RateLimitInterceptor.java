@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.security;
+package com.vastworld.vwbe.security.ratelimit;
 
 import com.vastworld.vwbe.services.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,11 +31,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return true; // no annotation = not rate limited
         }
 
+        //key: rate-limit:AuthController:login:ip:0:0:0:0:0:0:0:1
         String key = "rate-limit:" + handlerMethod.getMethod().getDeclaringClass().getSimpleName()
                 + ":" + handlerMethod.getMethod().getName()
                 + ":" + clientKey(request);
 
         Long count = redisService.increment(key);
+
         if (count == 1) {
             redisService.expire(key, Duration.ofMillis(rateLimit.unit().toMillis(rateLimit.duration())));
         }

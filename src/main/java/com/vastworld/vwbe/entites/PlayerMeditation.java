@@ -25,7 +25,7 @@ public class PlayerMeditation {
     private LocalDateTime startTime = LocalDateTime.now();
 
     @Column(name = "DurationMinutes", nullable = false)
-    private Integer durationMinutes;
+    private Integer durationMinutes;        //dih column, do not use
 
     @Column(name = "EndTime", nullable = false)
     private LocalDateTime endTime;
@@ -37,7 +37,7 @@ public class PlayerMeditation {
     private Long totalCultivationReward = 0L;
 
     @Column(name = "IsCompleted", nullable = false)
-    private Boolean isCompleted = false;
+    private Boolean isCompleted = false;      //dih column, do not use
 
     @Column(name = "IsClaimed", nullable = false)
     private Boolean isClaimed = false;

@@ -1,7 +1,9 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.realmstage.GetRealmStageResponse;
 import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.RealmStageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/realm-stages")
 @PreAuthorize("isAuthenticated()")
+@RateLimit(limit = 30)
 public class RealmStageController {
     private final RealmStageService realmStageService;
 
@@ -36,7 +39,7 @@ public class RealmStageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceResult<RealmStageDTO>> getRealmStageById(@PathVariable Integer id) {
+    public ResponseEntity<ServiceResult<GetRealmStageResponse>> getRealmStageById(@PathVariable Integer id) {
         var result = realmStageService.getRealmStageById(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }

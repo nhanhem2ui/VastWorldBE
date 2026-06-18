@@ -3,6 +3,7 @@ package com.vastworld.vwbe.controllers;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/players")
 @PreAuthorize("isAuthenticated()")
+@RateLimit(limit = 30)
 public class PlayerController {
     private final PlayerService playerService;
 
@@ -62,13 +64,6 @@ public class PlayerController {
             @PathVariable UUID id,
             @RequestBody PlayerDTO dto) {
         var result = playerService.updatePlayer(id, dto);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ServiceResult<Void>> deletePlayer(@PathVariable UUID id) {
-        var result = playerService.deletePlayer(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 }

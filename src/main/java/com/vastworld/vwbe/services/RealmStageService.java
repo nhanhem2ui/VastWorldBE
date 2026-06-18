@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.services;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.realmstage.GetRealmStageResponse;
 import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
 import com.vastworld.vwbe.entites.RealmStage;
 import com.vastworld.vwbe.repositories.RealmStageRepository;
@@ -41,17 +42,19 @@ public class RealmStageService {
         }
     }
 
-    public ServiceResult<RealmStageDTO> getRealmStageById(Integer id) {
+    public ServiceResult<GetRealmStageResponse> getRealmStageById(Integer id) {
         try {
             if (id == null || id <= 0) {
                 return ServiceResult.failure("Realm stage id is invalid");
             }
 
-            var realmStage = realmStageRepository.findById(id);
-            if (realmStage.isEmpty()) {
+            var realmStageOptional = realmStageRepository.findById(id);
+            if (realmStageOptional.isEmpty()) {
                 return ServiceResult.failure("Realm stage not found");
             }
-            return ServiceResult.success("Realm stage retrieved successfully", toDto(realmStage.get()));
+            var realmStage = realmStageOptional.get();
+            var data  = new GetRealmStageResponse(realmStage.getStageLevel(), realmStage.getStageName());
+            return ServiceResult.success("Realm stage retrieved successfully", data);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving realm stage", ex);
         }

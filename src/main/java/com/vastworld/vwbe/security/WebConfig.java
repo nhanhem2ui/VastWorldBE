@@ -1,5 +1,6 @@
 package com.vastworld.vwbe.security;
 
+import com.vastworld.vwbe.security.ratelimit.RateLimitInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

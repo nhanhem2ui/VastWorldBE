@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.security;
+package com.vastworld.vwbe.security.ratelimit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

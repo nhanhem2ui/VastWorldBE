@@ -3,6 +3,7 @@ package com.vastworld.vwbe.controllers;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.playerspiritroot.PlayerSpiritRootDTO;
 import com.vastworld.vwbe.dto.playerspiritroot.RollSpiritRootDTO;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerSpiritRootService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/player-spirit-roots")
 @PreAuthorize("isAuthenticated()")
+@RateLimit(limit = 30)
 public class PlayerSpiritRootController {
     private final PlayerSpiritRootService playerSpiritRootService;
 

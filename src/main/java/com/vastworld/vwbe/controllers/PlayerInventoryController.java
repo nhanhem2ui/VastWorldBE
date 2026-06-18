@@ -2,9 +2,11 @@ package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.playerinventory.PlayerInventoryDTO;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerInventoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,8 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 
 @RestController
 @RequestMapping("/api/player-inventories")
+@PreAuthorize("isAuthenticated()")
+@RateLimit(limit = 30)
 public class PlayerInventoryController {
     private final PlayerInventoryService playerInventoryService;
 

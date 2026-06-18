@@ -5,6 +5,7 @@ import com.vastworld.vwbe.dto.account.MeResponse;
 import com.vastworld.vwbe.dto.auth.AuthResponse;
 import com.vastworld.vwbe.dto.auth.LoginRequest;
 import com.vastworld.vwbe.dto.auth.RegisterRequest;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +23,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 
 @RestController
 @RequestMapping("/api/auth")
+@RateLimit
 public class AuthController {
 
     private final AuthService authService;
