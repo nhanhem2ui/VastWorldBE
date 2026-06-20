@@ -96,4 +96,17 @@ public final class GameBalance {
     public static int getGlobalStage(int realmId, int realmStageId) {
         return ((realmId - 1) * STAGES_PER_REALM) + realmStageId;
     }
+
+    public static int getNextRealmId(int realmId, int stageId) {
+        if (stageId < STAGES_PER_REALM) {
+            return realmId;
+        }
+        return realmId + 1;
+    }
+    public static int getNextStageId(int stageId) {
+        if (stageId < STAGES_PER_REALM) {
+            return stageId + 1;
+        }
+        return 1;
+    }
 }

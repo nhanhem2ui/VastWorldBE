@@ -2,10 +2,11 @@ package com.vastworld.vwbe.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.catalina.Realm;
 
 @AllArgsConstructor
 @Getter
-public enum Realm {
+public enum RealmEnum {
     LUYEN_KHI(1),
     TRUC_CO(2),
     KIM_DAN(3),
@@ -26,4 +27,13 @@ public enum Realm {
     THIEN_DAO(18);
 
     private final Integer value;
+
+    public static RealmEnum fromValue(Integer value) {
+        for (var realm : values()) {
+            if (realm.value.equals(value)) {
+                return realm;
+            }
+        }
+        throw new IllegalArgumentException("Unknown realm value: " + value);
+    }
 }

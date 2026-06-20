@@ -24,7 +24,10 @@ public final class CacheKeys {
     public static String spiritRoots(Object... keys) {
         return build("spiritRoots", keys);
     }
-    public static String playerMeditation(Object... keys){
-        return build("playerMeditation", keys);
+    public static String realmStages(Object... keys) {
+        return build("realmStages", keys);
+    }
+    public static String playerMeditations(Object... keys){
+        return build("playerMeditations", keys);
     }
 }

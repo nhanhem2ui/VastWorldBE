@@ -63,7 +63,7 @@ public class PlayerMeditationService {
                 return ServiceResult.failure("Player meditation id is invalid");
             }
 
-            var cacheKey = CacheKeys.playerMeditation("playerId", playerId);
+            var cacheKey = CacheKeys.playerMeditations("playerId", playerId);
             var cached = redisService.get(cacheKey, new TypeReference<GetPlayerMeditationByIdResponse>(){});
 
             if(cached != null){
@@ -98,13 +98,14 @@ public class PlayerMeditationService {
     }
 
     public ServiceResult<Void> beginMeditate(BeginMeditateRequest request){
-        var playerDTO = playerService.getPlayerById(request.playerId()).getData();
 
-        if (playerDTO == null) {
+        var playerResult = playerService.getPlayerEntityById(request.playerId());
+
+        if (!playerResult.isSuccess()) {
             return ServiceResult.failure("Player not exists");
         }
 
-        var player = playerRepository.getReferenceById(request.playerId());
+        var player = playerResult.getData();
 
         var existMediation = playerMeditationRepository.findByPlayer_IdAndIsClaimed(request.playerId(), false);
 
