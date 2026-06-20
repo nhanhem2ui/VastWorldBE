@@ -2,7 +2,10 @@ package com.vastworld.vwbe.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
+import com.vastworld.vwbe.common.GameBalance;
+import com.vastworld.vwbe.common.RealmEnum;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.entites.Account;
@@ -22,18 +25,23 @@ import java.util.UUID;
 public class PlayerService {
     private final PlayerRepository playerRepository;
     private final AccountRepository accountRepository;
+    private final CultivationRealmService cultivationRealmService;
     private final CultivationRealmRepository cultivationRealmRepository;
+    private final RealmStageService realmStageService;
     private final RealmStageRepository realmStageRepository;
     private final RedisService redisService;
 
     public PlayerService(PlayerRepository playerRepository, AccountRepository accountRepository,
-            CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository,
-            RedisService redisService) {
+                         CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository,
+                         RedisService redisService, CultivationRealmService cultivationRealmService,
+                         RealmStageService realmStageService) {
         this.playerRepository = playerRepository;
         this.accountRepository = accountRepository;
         this.cultivationRealmRepository = cultivationRealmRepository;
         this.realmStageRepository = realmStageRepository;
         this.redisService = redisService;
+        this.cultivationRealmService = cultivationRealmService;
+        this.realmStageService = realmStageService;
     }
 
     public ServiceResult<List<PlayerDTO>> getAllPlayers() {
@@ -55,27 +63,86 @@ public class PlayerService {
     }
 
     public ServiceResult<PlayerDTO> getPlayerById(UUID id) {
+        var player = getPlayerEntityById(id);
+
+        if (!player.isSuccess()) {
+            return ServiceResult.failure(player.getMessage());
+        }
+
+        return ServiceResult.success("Player retrieved successfully", toDto(player.getData()));
+    }
+
+    public ServiceResult<Player> getPlayerEntityById(UUID id) {
         try {
             if (id == null) {
                 return ServiceResult.failure("Player id is invalid");
             }
 
-            var cacheKey = CacheKeys.players(id);
-            var cached = redisService.get(cacheKey, new TypeReference<PlayerDTO>() {});
+            var cacheKey = CacheKeys.players("entity", id);
+            var cached = redisService.get(cacheKey, new TypeReference<Player>() {});
 
             if (cached != null) {
                 return ServiceResult.success("Player retrieved successfully", cached);
             }
 
             var player = playerRepository.findById(id);
-            if (player.isEmpty()) {
-                return ServiceResult.failure("Player not found");
-            }
+            return player.map(
+                    value -> ServiceResult.success("Player retrieved successfully", value))
+                    .orElseGet(() -> ServiceResult.failure("Player not found"));
 
-            return ServiceResult.success("Player retrieved successfully", toDto(player.get()));
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player", ex);
         }
+    }
+
+    public ServiceResult<GetPlayerNextBreakthroughResponse> getPlayerNextBreakthrough(UUID playerId) {
+        if (playerId == null) {
+            return ServiceResult.failure("PlayerId not found");
+        }
+
+        var playerResult = getPlayerEntityById(playerId);
+
+        if (!playerResult.isSuccess()) {
+            return ServiceResult.failure(playerResult.getMessage());
+        }
+
+        var player = playerResult.getData();
+
+        if (player.getRealmId() >= RealmEnum.values().length
+                && player.getRealmStage() >= GameBalance.STAGES_PER_REALM) {
+
+            return ServiceResult.failure("Player has reached the maximum realm");
+        }
+
+        int nextRealmId = GameBalance.getNextRealmId(player.getRealmId(), player.getRealmStage());
+        int nextStageId = GameBalance.getNextStageId(player.getRealmStage());
+
+        var isTribulation = player.getRealmStage() == GameBalance.STAGES_PER_REALM;
+
+        long breakthroughPoints = GameBalance.getBreakthroughCpPoints(nextRealmId, nextStageId);
+
+        var realmResult = cultivationRealmService.getCultivationRealmEntityById(nextRealmId);
+        var stageResult = realmStageService.getRealmStageEntityById(nextStageId);
+
+        if (!realmResult.isSuccess() || !stageResult.isSuccess()) {
+            return ServiceResult.failure("Internal Server error");
+        }
+        var nextRealmName = realmResult.getData().getName();
+        var nextStage = stageResult.getData();
+
+        var nextStageName = nextStage.getStageName() +"(" + nextStage.getStageLevel() + ")";
+
+        var chanceOfSuccess = 1F;
+
+        var response = new GetPlayerNextBreakthroughResponse(
+                nextRealmName,
+                nextStageName,
+                isTribulation,
+                breakthroughPoints,
+                chanceOfSuccess
+        );
+
+        return ServiceResult.success("Next breakthrough retrieved", response);
     }
 
     public ServiceResult<PlayerDTO> createPlayer(PlayerDTO dto) {

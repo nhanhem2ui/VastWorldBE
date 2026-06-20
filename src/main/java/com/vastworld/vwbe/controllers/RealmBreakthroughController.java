@@ -43,6 +43,9 @@ public class RealmBreakthroughController {
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
+    @GetMapping("/getPlayerNextBreakthrough/{playerId}")
+
+
     @PostMapping
     public ResponseEntity<ServiceResult<RealmBreakthroughDTO>> createRealmBreakthrough(@RequestBody RealmBreakthroughDTO dto) {
         var result = realmBreakthroughService.createRealmBreakthrough(dto);

@@ -1,5 +1,7 @@
 package com.vastworld.vwbe.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.realmstage.GetRealmStageResponse;
 import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
@@ -15,9 +17,11 @@ import java.util.List;
 @Transactional
 public class RealmStageService {
     private final RealmStageRepository realmStageRepository;
+    private final RedisService redisService;
 
-    public RealmStageService(RealmStageRepository realmStageRepository) {
+    public RealmStageService(RealmStageRepository realmStageRepository, RedisService redisService) {
         this.realmStageRepository = realmStageRepository;
+        this.redisService = redisService;
     }
 
     public ServiceResult<List<RealmStageDTO>> getAllRealmStages() {
@@ -44,20 +48,31 @@ public class RealmStageService {
 
     public ServiceResult<GetRealmStageResponse> getRealmStageById(Integer id) {
         try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Realm stage id is invalid");
-            }
+            var realmStage = getRealmStageEntityById(id).getData();
 
-            var realmStageOptional = realmStageRepository.findById(id);
-            if (realmStageOptional.isEmpty()) {
-                return ServiceResult.failure("Realm stage not found");
-            }
-            var realmStage = realmStageOptional.get();
             var data  = new GetRealmStageResponse(realmStage.getStageLevel(), realmStage.getStageName());
+
             return ServiceResult.success("Realm stage retrieved successfully", data);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving realm stage", ex);
         }
+    }
+
+    public ServiceResult<RealmStage> getRealmStageEntityById(Integer id){
+        if (id == null || id <= 0) {
+            return ServiceResult.failure("Realm stage id is invalid");
+        }
+
+        var cachedKey = CacheKeys.realmStages("entity", id);
+        var cached = redisService.get(cachedKey, new TypeReference<RealmStage>() {});
+
+        if(cached != null){
+            return ServiceResult.success("Realm stage retrieved successfully", cached);
+        }
+
+        var realmStageOptional = realmStageRepository.findById(id);
+        return realmStageOptional.map(realmStage -> ServiceResult.success("Realm stage retrieved successfully", realmStage))
+                .orElseGet(() -> ServiceResult.failure("Realm stage not found"));
     }
 
     public ServiceResult<RealmStageDTO> createRealmStage(RealmStageDTO dto) {

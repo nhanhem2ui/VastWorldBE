@@ -55,19 +55,31 @@ public class CultivationRealmService {
 
     public ServiceResult<CultivationRealmDTO> getCultivationRealmById(Integer id) {
         try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Cultivation realm id is invalid");
+            var serviceResult = getCultivationRealmEntityById(id);
+            if(!serviceResult.isSuccess()){
+                return ServiceResult.failure(serviceResult.getMessage());
             }
-
-            var cultivationRealm = cultivationRealmRepository.findById(id);
-            if (cultivationRealm.isPresent()) {
-                return ServiceResult.success("Cultivation realm retrieved successfully", toDto(cultivationRealm.get()));
-            } else {
-                return ServiceResult.failure("Cultivation realm not found");
-            }
+            return ServiceResult.success(serviceResult.getMessage(), toDto(serviceResult.getData()));
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving cultivation realm", ex);
         }
+    }
+
+    public ServiceResult<CultivationRealm> getCultivationRealmEntityById(Integer id){
+        if (id == null || id <= 0) {
+            return ServiceResult.failure("Cultivation realm id is invalid");
+        }
+
+        var cachedKey = CacheKeys.cultivationRealms("entity", id);
+        var cached = redisService.get(cachedKey, new TypeReference<CultivationRealm>() {});
+
+        if(cached != null){
+            return ServiceResult.success("Cultivation realm retrieved successfully", cached);
+        }
+
+        var cultivationRealm = cultivationRealmRepository.findById(id);
+        return cultivationRealm.map(realm -> ServiceResult.success("Cultivation realm retrieved successfully", realm))
+                .orElseGet(() -> ServiceResult.failure("Cultivation realm not found"));
     }
 
     public ServiceResult<CultivationRealmDTO> createCultivationRealm(CultivationRealmDTO dto) {

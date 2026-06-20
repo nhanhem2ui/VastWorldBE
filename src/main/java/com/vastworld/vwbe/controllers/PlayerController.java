@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.security.ratelimit.RateLimit;
@@ -57,6 +58,12 @@ public class PlayerController {
     public ResponseEntity<ServiceResult<PlayerDTO>> createNewPlayable(@RequestBody NewPlayableDTO dto) {
         var result = playerService.createNewPlayable(dto);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
+    }
+
+    @GetMapping("/nextBreakthrough/{playerId}")
+    public ResponseEntity<ServiceResult<GetPlayerNextBreakthroughResponse>> getPlayerNextBreakthrough(@PathVariable UUID playerId){
+        var result = playerService.getPlayerNextBreakthrough(playerId);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
     @PutMapping("/{id}")
