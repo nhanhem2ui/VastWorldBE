@@ -79,7 +79,8 @@ public class PlayerService {
             }
 
             var cacheKey = CacheKeys.players("entity", id);
-            var cached = redisService.get(cacheKey, new TypeReference<Player>() {});
+            var cached = redisService.get(cacheKey, new TypeReference<Player>() {
+            });
 
             if (cached != null) {
                 return ServiceResult.success("Player retrieved successfully", cached);
@@ -87,7 +88,7 @@ public class PlayerService {
 
             var player = playerRepository.findById(id);
             return player.map(
-                    value -> ServiceResult.success("Player retrieved successfully", value))
+                            value -> ServiceResult.success("Player retrieved successfully", value))
                     .orElseGet(() -> ServiceResult.failure("Player not found"));
 
         } catch (Exception ex) {
@@ -99,72 +100,92 @@ public class PlayerService {
         if (playerId == null) {
             return ServiceResult.failure("PlayerId not found");
         }
+        try {
+            var playerResult = getPlayerEntityById(playerId);
 
-        var playerResult = getPlayerEntityById(playerId);
+            if (!playerResult.isSuccess()) {
+                return ServiceResult.failure(playerResult.getMessage());
+            }
 
-        if (!playerResult.isSuccess()) {
-            return ServiceResult.failure(playerResult.getMessage());
+            var player = playerResult.getData();
+
+            if (player.getRealmId() >= RealmEnum.values().length
+                    && player.getRealmStage() >= GameBalance.STAGES_PER_REALM) {
+
+                return ServiceResult.failure("Player has reached the maximum realm");
+            }
+
+            var nextRealmAndStage = getNextRealmAndStageId(player.getRealmId(), player.getRealmStage());
+
+            var isTribulation = player.getRealmStage() == GameBalance.STAGES_PER_REALM;
+
+            long breakthroughPoints = GameBalance.getBreakthroughCpPoints(nextRealmAndStage.realmId, nextRealmAndStage.stageId);
+
+            var chanceOfSuccess = 0F;
+
+            var response = new GetPlayerNextBreakthroughResponse(
+                    isTribulation,
+                    breakthroughPoints,
+                    chanceOfSuccess
+            );
+            return ServiceResult.success("Next breakthrough retrieved", response);
+        } catch (Exception ex) {
+            return ServiceResult.failure(ex.getMessage());
         }
-
-        var player = playerResult.getData();
-
-        if (player.getRealmId() >= RealmEnum.values().length
-                && player.getRealmStage() >= GameBalance.STAGES_PER_REALM) {
-
-            return ServiceResult.failure("Player has reached the maximum realm");
-        }
-
-        int nextRealmId = GameBalance.getNextRealmId(player.getRealmId(), player.getRealmStage());
-        int nextStageId = GameBalance.getNextStageId(player.getRealmStage());
-
-        var isTribulation = player.getRealmStage() == GameBalance.STAGES_PER_REALM;
-
-        long breakthroughPoints = GameBalance.getBreakthroughCpPoints(nextRealmId, nextStageId);
-
-        var realmResult = cultivationRealmService.getCultivationRealmEntityById(nextRealmId);
-        var stageResult = realmStageService.getRealmStageEntityById(nextStageId);
-
-        if (!realmResult.isSuccess() || !stageResult.isSuccess()) {
-            return ServiceResult.failure("Internal Server error");
-        }
-        var nextRealmName = realmResult.getData().getName();
-        var nextStage = stageResult.getData();
-
-        var nextStageName = nextStage.getStageName() +"(" + nextStage.getStageLevel() + ")";
-
-        var chanceOfSuccess = 1F;
-
-        var response = new GetPlayerNextBreakthroughResponse(
-                nextRealmName,
-                nextStageName,
-                isTribulation,
-                breakthroughPoints,
-                chanceOfSuccess
-        );
-
-        return ServiceResult.success("Next breakthrough retrieved", response);
     }
 
-    public ServiceResult<PlayerDTO> createPlayer(PlayerDTO dto) {
+    private RealmAndStageId getNextRealmAndStageId(int currentRealm, int currentStage) {
+        int nextRealmId = GameBalance.getNextRealmId(currentRealm, currentStage);
+        int nextStageId = GameBalance.getNextStageId(currentStage);
+        return new RealmAndStageId(nextRealmId, nextStageId);
+    }
+
+    public ServiceResult<Void> startBreakthrough(UUID playerId) {
+        if (playerId == null) {
+            return ServiceResult.failure("PlayerId not found");
+        }
+
         try {
-            var validationResult = validateDto(dto);
-            if (validationResult != null) {
-                return validationResult;
+            var playerResult = getPlayerEntityById(playerId);
+            if (!playerResult.isSuccess() || playerResult.getData() == null) {
+                return ServiceResult.failure("Player not found");
+            }
+            Player player = playerResult.getData();
+
+            var breakthroughResult = getPlayerNextBreakthrough(playerId);
+            if (!breakthroughResult.isSuccess() || breakthroughResult.getData() == null) {
+                return ServiceResult.failure("Next breakthrough data not available");
+            }
+            var nextBreakthrough = breakthroughResult.getData();
+
+            if (player.getCultivationPoint() < nextBreakthrough.breakthroughPoints()) {
+                return ServiceResult.failure("Not enough cultivation points");
             }
 
-            var referencesResult = resolveReferences(dto);
-            if (!referencesResult.isSuccess()) {
-                return ServiceResult.failure(referencesResult.getMessage());
+            //cp deduction
+            player.setCultivationPoint(player.getCultivationPoint() - nextBreakthrough.breakthroughPoints());
+
+            var nextRealmAndStage = getNextRealmAndStageId(player.getRealmId(), player.getRealmStage());
+
+            if (Boolean.TRUE.equals(nextBreakthrough.isTribulation())) {
+                // TODO: Trigger Tribulation combat/event logic here
+                 playerRepository.save(player);
+                return ServiceResult.success("Tribulation triggered! Prepare for lightning strikes.");
+            } else {
+                if (Math.random() <= nextBreakthrough.chanceOfSuccess()) {
+                    player.setRealmId(nextRealmAndStage.realmId());
+                    player.setRealmStage(nextRealmAndStage.stageId());
+
+                    playerRepository.save(player);
+                    return ServiceResult.success("Breakthrough successfully completed!");
+                } else {
+                    playerRepository.save(player);
+                    return ServiceResult.failure("Breakthrough failed!");
+                }
             }
 
-            Player player = new Player();
-            player.setAccount(referencesResult.getData().account());
-            applyDto(player, dto);
-
-            var savedPlayer = playerRepository.save(player);
-            return ServiceResult.success("Player created successfully", toDto(savedPlayer));
         } catch (Exception ex) {
-            return ServiceResult.failure("Error creating player", ex);
+            return ServiceResult.failure("An error occurred during breakthrough: " + ex.getMessage());
         }
     }
 
@@ -186,7 +207,7 @@ public class PlayerService {
             var player = new Player();
             player.setAccount(account.get());
             player.setGender(dto.gender());
-            player.setRealmId(1);
+            player.setRealmId(RealmEnum.LUYEN_KHI.getValue());
             player.setRealmStage(1);
 
             var savedPlayer = playerRepository.save(player);
@@ -200,11 +221,6 @@ public class PlayerService {
         try {
             if (id == null) {
                 return ServiceResult.failure("Player id is invalid");
-            }
-
-            var validationResult = validateDto(dto);
-            if (validationResult != null) {
-                return validationResult;
             }
 
             var playerOptional = playerRepository.findById(id);
@@ -227,6 +243,7 @@ public class PlayerService {
             return ServiceResult.failure("Error updating player", ex);
         }
     }
+
     private void applyDto(Player player, PlayerDTO dto) {
         player.setRealmId(dto.realmId());
         player.setGender(dto.gender());
@@ -246,8 +263,8 @@ public class PlayerService {
     }
 
     private PlayerDTO toDto(Player player) {
-        var realm = cultivationRealmRepository.findById(player.getRealmId()).orElse(null);
-        var realmStage = realmStageRepository.findByStageLevel(player.getRealmStage()).orElse(null);
+        var realm = cultivationRealmService.getCultivationRealmEntityById(player.getRealmId()).getData();
+        var realmStage = realmStageService.getRealmStageEntityById(player.getRealmId()).getData();
         var account = player.getAccount();
 
         return new PlayerDTO(
@@ -260,7 +277,7 @@ public class PlayerService {
                 player.getGender(),
                 player.getRollNum(),
                 player.getRealmStage(),
-                realmStage != null ? realmStage.getStageName() : null,
+                realmStage != null ? realmStage.getStageName() + "(" + realmStage.getStageLevel() + ")" : null,
                 player.getHp(),
                 player.getAttack(),
                 player.getDefense(),
@@ -274,41 +291,6 @@ public class PlayerService {
                 player.getSpiritStone(),
                 player.getCreatedAt()
         );
-    }
-
-    private ServiceResult<PlayerDTO> validateDto(PlayerDTO dto) {
-        if (dto == null) {
-            return ServiceResult.failure("Player data is required");
-        }
-
-        if (dto.accountId() == null) {
-            return ServiceResult.failure("Account id is invalid");
-        }
-
-        if (dto.realmId() == null || dto.realmId() <= 0) {
-            return ServiceResult.failure("Realm id is invalid");
-        }
-
-        if (dto.realmStage() == null || dto.realmStage() <= 0) {
-            return ServiceResult.failure("Realm stage is invalid");
-        }
-
-        if (isNegative(dto.hp())
-                || isNegative(dto.attack())
-                || isNegative(dto.defense())
-                || isNegative(dto.critRate())
-                || isNegative(dto.critDamage())
-                || isNegative(dto.speed())
-                || isNegative(dto.lifeSteal())
-                || isNegative(dto.cultivationSpeed())
-                || isNegative(dto.cultivationPoint())
-                || isNegative(dto.reputation())
-                || isNegative(dto.spiritStone())
-                || isNegative(dto.rollNum())) {
-            return ServiceResult.failure("Player stats must be greater than or equal to 0");
-        }
-
-        return null;
     }
 
     private ServiceResult<PlayerReferences> resolveReferences(PlayerDTO dto) {
@@ -345,5 +327,8 @@ public class PlayerService {
     }
 
     private record PlayerReferences(Account account) {
+    }
+
+    private record RealmAndStageId(Integer realmId, Integer stageId) {
     }
 }
