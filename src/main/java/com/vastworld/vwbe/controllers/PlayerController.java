@@ -9,6 +9,7 @@ import com.vastworld.vwbe.services.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,13 +48,6 @@ public class PlayerController {
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ServiceResult<PlayerDTO>> createPlayer(@RequestBody PlayerDTO dto) {
-        var result = playerService.createPlayer(dto);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
-    }
-
     @PostMapping("/playable")
     public ResponseEntity<ServiceResult<PlayerDTO>> createNewPlayable(@RequestBody NewPlayableDTO dto) {
         var result = playerService.createNewPlayable(dto);
@@ -63,6 +57,12 @@ public class PlayerController {
     @GetMapping("/nextBreakthrough/{playerId}")
     public ResponseEntity<ServiceResult<GetPlayerNextBreakthroughResponse>> getPlayerNextBreakthrough(@PathVariable UUID playerId){
         var result = playerService.getPlayerNextBreakthrough(playerId);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @PostMapping("/breakthrough/{playerId}")
+    public ResponseEntity<ServiceResult<Void>> startBreakthrough(@PathVariable UUID playerId){
+        var result = playerService.startBreakthrough(playerId);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 

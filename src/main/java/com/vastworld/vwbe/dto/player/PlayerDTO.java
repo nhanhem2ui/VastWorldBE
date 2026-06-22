@@ -21,20 +21,32 @@ public record PlayerDTO(
         Integer realmId,
         String realmName,
         Boolean gender,
+        @NotNull
         Integer rollNum,
         @Positive
         Integer realmStage,
         String realmStageName,
+        @Positive
         Long hp,
+        @Positive
         Long attack,
+        @Positive
         Long defense,
+        @Positive
         Double critRate,
+        @Positive
         Double critDamage,
+        @Positive
         Double speed,
+        @Positive
         Double lifeSteal,
+        @Positive
         Double cultivationSpeed,
+        @Positive
         Long cultivationPoint,
+        @Positive
         Long reputation,
+        @Positive
         Long spiritStone,
         @PastOrPresent
         LocalDateTime createdAt

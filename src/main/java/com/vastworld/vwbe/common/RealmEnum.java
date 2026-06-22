@@ -36,4 +36,21 @@ public enum RealmEnum {
         }
         throw new IllegalArgumentException("Unknown realm value: " + value);
     }
+
+    public static RealmEnum fromString(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Realm name cannot be null or empty");
+        }
+        String normalized = value
+                .trim()
+                .replace(' ', '_')
+                .toUpperCase();
+
+        for (RealmEnum realm : values()) {
+            if (realm.name().equals(normalized)) {
+                return realm;
+            }
+        }
+        throw new IllegalArgumentException("Unknown realm: " + value);
+    }
 }
