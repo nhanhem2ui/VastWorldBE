@@ -1,8 +1,7 @@
-package com.vastworld.vwbe.common;
+package com.vastworld.vwbe.common.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.catalina.Realm;
 
 @AllArgsConstructor
 @Getter

@@ -30,4 +30,5 @@ public final class CacheKeys {
     public static String playerMeditations(Object... keys){
         return build("playerMeditations", keys);
     }
+    public static String maps(Object... keys){return build("maps", keys);}
 }

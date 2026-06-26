@@ -3,7 +3,7 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.common.GameBalance;
-import com.vastworld.vwbe.common.RealmEnum;
+import com.vastworld.vwbe.common.enums.RealmEnum;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
