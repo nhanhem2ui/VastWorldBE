@@ -1,7 +1,7 @@
 package com.vastworld.vwbe.services;
 
 import com.vastworld.vwbe.repositories.PlayerRepository;
-import com.vastworld.vwbe.security.RoleConstants;
+import com.vastworld.vwbe.common.enums.RoleConstants;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.account.MeResponse;
 import com.vastworld.vwbe.dto.auth.*;

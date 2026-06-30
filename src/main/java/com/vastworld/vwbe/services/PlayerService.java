@@ -3,22 +3,22 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.common.GameBalance;
-import com.vastworld.vwbe.common.RealmEnum;
+import com.vastworld.vwbe.common.enums.RealmEnum;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.entites.Account;
 import com.vastworld.vwbe.entites.Player;
-import com.vastworld.vwbe.repositories.AccountRepository;
-import com.vastworld.vwbe.repositories.CultivationRealmRepository;
-import com.vastworld.vwbe.repositories.PlayerRepository;
-import com.vastworld.vwbe.repositories.RealmStageRepository;
+import com.vastworld.vwbe.entites.PlayerLocation;
+import com.vastworld.vwbe.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -29,12 +29,15 @@ public class PlayerService {
     private final CultivationRealmRepository cultivationRealmRepository;
     private final RealmStageService realmStageService;
     private final RealmStageRepository realmStageRepository;
+    private final PlayerLocationRepository playerLocationRepository;
     private final RedisService redisService;
+    private final MapRepository mapRepository;
 
     public PlayerService(PlayerRepository playerRepository, AccountRepository accountRepository,
                          CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository,
                          RedisService redisService, CultivationRealmService cultivationRealmService,
-                         RealmStageService realmStageService) {
+                         RealmStageService realmStageService, PlayerLocationRepository playerLocationRepository,
+                         MapRepository mapRepository) {
         this.playerRepository = playerRepository;
         this.accountRepository = accountRepository;
         this.cultivationRealmRepository = cultivationRealmRepository;
@@ -42,6 +45,8 @@ public class PlayerService {
         this.redisService = redisService;
         this.cultivationRealmService = cultivationRealmService;
         this.realmStageService = realmStageService;
+        this.playerLocationRepository = playerLocationRepository;
+        this.mapRepository = mapRepository;
     }
 
     public ServiceResult<List<PlayerDTO>> getAllPlayers() {
@@ -63,13 +68,29 @@ public class PlayerService {
     }
 
     public ServiceResult<PlayerDTO> getPlayerById(UUID id) {
-        var player = getPlayerEntityById(id);
+        if (id == null) return ServiceResult.failure("Player id is invalid");
 
-        if (!player.isSuccess()) {
-            return ServiceResult.failure(player.getMessage());
+        try {
+            var cacheKey = CacheKeys.players("dto", id);
+
+            var cachedDto = redisService.get(cacheKey, new TypeReference<PlayerDTO>() {});
+            if (cachedDto != null) {
+                return ServiceResult.success("Player retrieved successfully", cachedDto);
+            }
+
+            var playerOpt = playerRepository.findById(id);
+            if (playerOpt.isEmpty()) {
+                return ServiceResult.failure("Player not found");
+            }
+
+            PlayerDTO dto = toDto(playerOpt.get());
+            redisService.set(cacheKey, dto);
+
+            return ServiceResult.success("Player retrieved successfully", dto);
+
+        } catch (Exception ex) {
+            return ServiceResult.failure("Error retrieving player from cache", ex);
         }
-
-        return ServiceResult.success("Player retrieved successfully", toDto(player.getData()));
     }
 
     public ServiceResult<Player> getPlayerEntityById(UUID id) {
@@ -78,17 +99,10 @@ public class PlayerService {
                 return ServiceResult.failure("Player id is invalid");
             }
 
-            var cacheKey = CacheKeys.players("entity", id);
-            var cached = redisService.get(cacheKey, new TypeReference<Player>() {
-            });
-
-            if (cached != null) {
-                return ServiceResult.success("Player retrieved successfully", cached);
-            }
-
-            var player = playerRepository.findById(id);
-            return player.map(
-                            value -> ServiceResult.success("Player retrieved successfully", value))
+            // Database findById natively uses Hibernate First-Level Cache.
+            // If it's already in the current transaction session, it won't hit the DB anyway.
+            return playerRepository.findById(id)
+                    .map(value -> ServiceResult.success("Player retrieved successfully", value))
                     .orElseGet(() -> ServiceResult.failure("Player not found"));
 
         } catch (Exception ex) {
@@ -144,7 +158,7 @@ public class PlayerService {
         if (playerId == null) {
             return ServiceResult.failure("PlayerId not found");
         }
-
+        var cacheKey = CacheKeys.players("dto", playerId);
         try {
             var playerResult = getPlayerEntityById(playerId);
             if (!playerResult.isSuccess() || playerResult.getData() == null) {
@@ -170,6 +184,7 @@ public class PlayerService {
             if (Boolean.TRUE.equals(nextBreakthrough.isTribulation())) {
                 // TODO: Trigger Tribulation combat/event logic here
                  playerRepository.save(player);
+                redisService.delete(cacheKey);
                 return ServiceResult.success("Tribulation triggered! Prepare for lightning strikes.");
             } else {
                 if (Math.random() <= nextBreakthrough.chanceOfSuccess()) {
@@ -177,9 +192,11 @@ public class PlayerService {
                     player.setRealmStage(nextRealmAndStage.stageId());
 
                     playerRepository.save(player);
+                    redisService.delete(cacheKey);
                     return ServiceResult.success("Breakthrough successfully completed!");
                 } else {
                     playerRepository.save(player);
+                    redisService.delete(cacheKey);
                     return ServiceResult.failure("Breakthrough failed!");
                 }
             }
@@ -211,6 +228,21 @@ public class PlayerService {
             player.setRealmStage(1);
 
             var savedPlayer = playerRepository.save(player);
+
+            var defaultMap = mapRepository.findById(1);
+
+            if(defaultMap.isEmpty()) {
+                return ServiceResult.failure("Internal server error");
+            }
+
+            //set default location
+            var playerLocation = new PlayerLocation();
+            playerLocation.setPlayer(player);
+            playerLocation.setX(0);
+            playerLocation.setY(0);
+            playerLocation.setCurrentMap(defaultMap.get());
+            playerLocationRepository.save(playerLocation);
+
             return ServiceResult.success("Playable character created successfully", toDto(savedPlayer));
         } catch (Exception ex) {
             return ServiceResult.failure("Error creating playable character", ex);

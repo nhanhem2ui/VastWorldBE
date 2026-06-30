@@ -1,4 +1,4 @@
-package com.vastworld.vwbe.security;
+package com.vastworld.vwbe.common.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
