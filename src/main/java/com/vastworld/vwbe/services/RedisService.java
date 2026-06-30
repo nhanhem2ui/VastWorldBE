@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class RedisService {
@@ -20,11 +21,12 @@ public class RedisService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     *Override value if exists
-     */
     public <T> void set(String key, T value) {
-        redis.opsForValue().set(key, value);
+        redis.opsForValue().set(key, value, 1, TimeUnit.HOURS);
+    }
+
+    public <T> void set(String key, T value, long timeout, TimeUnit timeUnit) {
+        redis.opsForValue().set(key, value, timeout, timeUnit);
     }
 
     public <T> boolean setIfAbsent(String key, T value
@@ -41,6 +43,11 @@ public class RedisService {
         //convert to <T>
         return objectMapper.convertValue(raw, typeRef);
     }
+
+    public void delete(String key) {
+        redis.delete(key);
+    }
+
     public Long increment(String key) {
         return redis.opsForValue().increment(key);
     }
@@ -48,5 +55,4 @@ public class RedisService {
     public void expire(String key, Duration duration) {
         redis.expire(key, duration);
     }
-
 }

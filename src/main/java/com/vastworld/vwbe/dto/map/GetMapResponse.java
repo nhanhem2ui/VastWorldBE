@@ -6,5 +6,6 @@ public record GetMapResponse(
         String mapName,
         Integer mapWidth,
         Integer mapHeight,
-        List<TilesOfMaps> mapTiles
+        List<TilesOfMaps> mapTiles,
+        List<TilesOfMaps> mapDecorations
 ){}

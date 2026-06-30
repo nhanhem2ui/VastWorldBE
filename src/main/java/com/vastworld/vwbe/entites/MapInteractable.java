@@ -5,15 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "MapDecorations")
+@Table(name = "MapInteractables")
 @Getter
 @Setter
-public class MapDecoration {
+public class MapInteractable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "DecorationID")
-    private Integer decorationId;
+    @Column(name = "InteractableID")
+    private Integer interactableId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MapID", nullable = false)
@@ -25,10 +25,10 @@ public class MapDecoration {
     @Column(name = "Y", nullable = false)
     private Integer y;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "AssetID", nullable = false)
-    private GameAsset gameAsset;
+    @Column(name = "Type", nullable = false, length = 50)
+    private String type;
 
-    @Column(name = "SpriteFrame")
-    private Integer spriteFrame;
+    @Lob
+    @Column(name = "Data")
+    private String data;
 }
