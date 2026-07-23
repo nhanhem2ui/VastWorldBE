@@ -1,5 +1,6 @@
 package com.vastworld.vwbe.entites;
 
+import com.vastworld.vwbe.common.enums.MapInteractableTypes;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,10 +26,10 @@ public class MapInteractable {
     @Column(name = "Y", nullable = false)
     private Integer y;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "Type", nullable = false, length = 50)
-    private String type;
+    private MapInteractableTypes type;
 
-    @Lob
-    @Column(name = "Data")
+    @Column(name = "Data", columnDefinition = "nvarchar(max)")
     private String data;
 }

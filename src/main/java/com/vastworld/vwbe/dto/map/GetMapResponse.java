@@ -7,5 +7,7 @@ public record GetMapResponse(
         Integer mapWidth,
         Integer mapHeight,
         List<TilesOfMaps> mapTiles,
-        List<TilesOfMaps> mapDecorations
-){}
+        List<TilesOfMaps> mapDecorations,
+        List<InteractableOfMap> mapInteractable
+) {
+}

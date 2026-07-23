@@ -42,6 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @RateLimit(limit = 5)
     public ResponseEntity<ServiceResult<AuthResponse>> login(@RequestBody LoginRequest request,
                                                              HttpServletResponse response) {
         var result = authService.login(request);
@@ -61,6 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @RateLimit(limit = 5)
     public ResponseEntity<ServiceResult<Void>> logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
@@ -79,6 +81,7 @@ public class AuthController {
         var result = authService.confirmEmail(userId, token);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
+
     @GetMapping("/me")
     public ResponseEntity<ServiceResult<MeResponse>> me(HttpServletRequest request) {
         var result = authService.Me(request);
