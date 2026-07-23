@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.map.*;
-import com.vastworld.vwbe.repositories.MapDecorationRepository;
-import com.vastworld.vwbe.repositories.MapRepository;
-import com.vastworld.vwbe.repositories.MapTileRepository;
-import com.vastworld.vwbe.repositories.PlayerLocationRepository;
+import com.vastworld.vwbe.repositories.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,18 +18,21 @@ public class MapService {
     private final MapRepository mapRepository;
     private final MapDecorationRepository mapDecorationRepository;
     private final PlayerLocationRepository playerLocationRepository;
+    private final MapInteractableRepository mapInteractableRepository;
     private final PlayerService playerService;
     private final RedisService redisService;
 
     public MapService(MapTileRepository mapTileRepository, MapRepository mapRepository,
                       RedisService redisService, PlayerService playerService,
-                      PlayerLocationRepository playerLocationRepository, MapDecorationRepository mapDecorationRepository) {
+                      PlayerLocationRepository playerLocationRepository, MapDecorationRepository mapDecorationRepository,
+                      MapInteractableRepository mapInteractableRepository) {
         this.mapTileRepository = mapTileRepository;
         this.mapRepository = mapRepository;
         this.redisService = redisService;
         this.playerService = playerService;
         this.playerLocationRepository = playerLocationRepository;
         this.mapDecorationRepository = mapDecorationRepository;
+        this.mapInteractableRepository = mapInteractableRepository;
     }
 
     public ServiceResult<GetMapResponse> getMap(Integer mapId) {
@@ -41,12 +42,12 @@ public class MapService {
             });
 
             if (cached != null) {
-                return ServiceResult.success("Map retrieve successfully", cached);
+                return ServiceResult.success("Map retrieve successfully", cached, HttpStatus.OK);
             }
 
             var mapOptional = mapRepository.findById(mapId);
             if (mapOptional.isEmpty()) {
-                return ServiceResult.failure("Map not found");
+                return ServiceResult.failure("Map not found", HttpStatus.NOT_FOUND);
             }
 
             var map = mapOptional.get();
@@ -105,17 +106,26 @@ public class MapService {
                 );
             }).toList();
 
+            var mapInteractable = mapInteractableRepository.findByMap_MapId(mapId);
+
+            var interactable = mapInteractable.stream().map(iter -> new InteractableOfMap(
+                    iter.getX(),
+                    iter.getY(),
+                    iter.getType()
+            )).toList();
+
             var response = new GetMapResponse(
                     map.getMapName(),
                     map.getWidth(),
                     map.getHeight(),
                     tiles,
-                    decorations
+                    decorations,
+                    interactable
             );
-            return ServiceResult.success("Map retrieve successfully", response);
+            return ServiceResult.success("Map retrieve successfully", response, HttpStatus.OK);
 
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving map.", ex);
+            return ServiceResult.failure("Error retrieving map.", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -123,12 +133,12 @@ public class MapService {
         try {
             var player = playerService.getPlayerById(playerId).getData();
             if (player == null) {
-                return ServiceResult.failure("Player not found");
+                return ServiceResult.failure("Player not found",  HttpStatus.NOT_FOUND);
             }
             var playerPositionOptional = playerLocationRepository.findByPlayer_Id(playerId);
 
             if (playerPositionOptional.isEmpty()) {
-                return ServiceResult.failure("Internal server error");
+                return ServiceResult.failure("Internal server error",   HttpStatus.INTERNAL_SERVER_ERROR);
             }
             var playerPosition = playerPositionOptional.get();
             var data = new GetPlayerLocationResponse(
@@ -136,9 +146,9 @@ public class MapService {
                     playerPosition.getX(),
                     playerPosition.getY()
             );
-            return ServiceResult.success("Player location retrieve successfully", data);
+            return ServiceResult.success("Player location retrieve successfully", data, HttpStatus.OK);
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player location.", ex);
+            return ServiceResult.failure("Error retrieving player location.", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -147,17 +157,17 @@ public class MapService {
 
             var playerLocationOptional = playerLocationRepository.findByPlayer_Id(request.playerId());
             if (playerLocationOptional.isEmpty()) {
-                return ServiceResult.failure("Player not found");
+                return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
             }
 
             var playerLocation = playerLocationOptional.get();
 
             if (playerLocation.getX().equals(request.x()) && playerLocation.getY().equals(request.y())) {
-                return ServiceResult.failure("Coordinates are the same");
+                return ServiceResult.failure("Coordinates are the same", HttpStatus.BAD_REQUEST);
             }
             var mapOptional = mapRepository.findById(request.mapId());
             if (mapOptional.isEmpty()) {
-                return ServiceResult.failure("Map not found");
+                return ServiceResult.failure("Map not found",  HttpStatus.NOT_FOUND);
             }
 
             if (!playerLocation.getCurrentMap().equals(mapOptional.get())) {
@@ -168,9 +178,9 @@ public class MapService {
             playerLocation.setY(request.y());
             playerLocationRepository.save(playerLocation);
 
-            return ServiceResult.success("Travelled to destination");
+            return ServiceResult.success("Travelled to destination", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player location.", ex);
+            return ServiceResult.failure("Error retrieving player location.", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
