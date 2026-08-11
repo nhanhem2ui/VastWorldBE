@@ -3,11 +3,12 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -21,6 +22,13 @@ public class RedisService {
         this.redis = redis;
         this.objectMapper = objectMapper;
     }
+    private static final RedisScript<Long> INCR_WITH_EXPIRE = RedisScript.of("""
+    local current = redis.call('INCR', KEYS[1])
+    if tonumber(current) == 1 then
+      redis.call('PEXPIRE', KEYS[1], ARGV[1])
+    end
+    return current
+    """, Long.class);
 
     public <T> void set(String key, T value) {
         redis.opsForValue().set(key, value, 1, TimeUnit.HOURS);
@@ -37,6 +45,7 @@ public class RedisService {
         );
     }
 
+
     public <T> T get(String key, TypeReference<T> typeRef) {
         //raw: LinkedHashMap
         Object raw = redis.opsForValue().get(key);
@@ -47,6 +56,11 @@ public class RedisService {
 
     public void delete(String key) {
         redis.delete(key);
+    }
+
+    public long incrementWithExpiry(String key, Duration window) {
+        Long result = redis.execute(INCR_WITH_EXPIRE, List.of(key), String.valueOf(window.toMillis()));
+        return result == null ? 0 : result;
     }
 
     public Long increment(String key) {

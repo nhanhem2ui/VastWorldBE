@@ -36,3 +36,4 @@ src/main/resources/application.properties
 sql.sql
 setup.txt
 maptiles.sql
+src/main/resources/keystore.p12

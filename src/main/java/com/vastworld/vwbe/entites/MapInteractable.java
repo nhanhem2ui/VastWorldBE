@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.entites;
 
-import com.vastworld.vwbe.common.enums.MapInteractableTypes;
+import com.vastworld.vwbe.enums.MapInteractableTypes;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

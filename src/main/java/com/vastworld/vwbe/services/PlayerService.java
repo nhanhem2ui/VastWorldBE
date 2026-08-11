@@ -3,7 +3,6 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.common.GameBalance;
-import com.vastworld.vwbe.common.enums.RealmEnum;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
@@ -11,14 +10,14 @@ import com.vastworld.vwbe.dto.player.PlayerDTO;
 import com.vastworld.vwbe.entites.Account;
 import com.vastworld.vwbe.entites.Player;
 import com.vastworld.vwbe.entites.PlayerLocation;
+import com.vastworld.vwbe.enums.RealmEnum;
 import com.vastworld.vwbe.repositories.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -99,8 +98,6 @@ public class PlayerService {
                 return ServiceResult.failure("Player id is invalid");
             }
 
-            // Database findById natively uses Hibernate First-Level Cache.
-            // If it's already in the current transaction session, it won't hit the DB anyway.
             return playerRepository.findById(id)
                     .map(value -> ServiceResult.success("Player retrieved successfully", value))
                     .orElseGet(() -> ServiceResult.failure("Player not found"));
@@ -142,7 +139,7 @@ public class PlayerService {
                     breakthroughPoints,
                     chanceOfSuccess
             );
-            return ServiceResult.success("Next breakthrough retrieved", response);
+            return ServiceResult.success("Next breakthrough retrieved", response, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure(ex.getMessage());
         }

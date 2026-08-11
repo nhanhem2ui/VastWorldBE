@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.dto.map;
 
-import com.vastworld.vwbe.common.enums.AssetType;
+import com.vastworld.vwbe.enums.AssetType;
 
 public record AssetTile(
         Boolean isAnimated,

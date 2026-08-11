@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.entites;
 
-import com.vastworld.vwbe.common.enums.CombatStatus;
+import com.vastworld.vwbe.enums.CombatStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

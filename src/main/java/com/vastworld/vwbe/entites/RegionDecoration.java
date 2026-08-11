@@ -53,6 +53,6 @@ public class RegionDecoration {
     @Column(name = "BackgroundTexture", nullable = false)
     private String backgroundTexture;
 
-    @Column(name = "TextColor", nullable = false, length = 7)
+    @Column(name = "TextColor", nullable = false, columnDefinition = "char(7)")
     private String textColor;
 }

@@ -7,6 +7,7 @@ import com.vastworld.vwbe.dto.realmstage.GetRealmStageResponse;
 import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
 import com.vastworld.vwbe.entites.RealmStage;
 import com.vastworld.vwbe.repositories.RealmStageRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,13 +49,20 @@ public class RealmStageService {
 
     public ServiceResult<GetRealmStageResponse> getRealmStageById(Integer id) {
         try {
+
+            var cachedKey = CacheKeys.realmStages(id);
+            var cached = redisService.get(cachedKey, new TypeReference<GetRealmStageResponse>() {});
+
+            if(cached != null){
+                return ServiceResult.success("Realm stage retrieved successfully", cached, HttpStatus.OK);
+            }
             var realmStage = getRealmStageEntityById(id).getData();
 
             var data  = new GetRealmStageResponse(realmStage.getStageLevel(), realmStage.getStageName());
 
-            return ServiceResult.success("Realm stage retrieved successfully", data);
+            return ServiceResult.success("Realm stage retrieved successfully", data, HttpStatus.OK);
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving realm stage", ex);
+            return ServiceResult.failure("Error retrieving realm stage", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -62,14 +70,6 @@ public class RealmStageService {
         if (id == null || id <= 0) {
             return ServiceResult.failure("Realm stage id is invalid");
         }
-
-        var cachedKey = CacheKeys.realmStages("entity", id);
-        var cached = redisService.get(cachedKey, new TypeReference<RealmStage>() {});
-
-        if(cached != null){
-            return ServiceResult.success("Realm stage retrieved successfully", cached);
-        }
-
         var realmStageOptional = realmStageRepository.findById(id);
         return realmStageOptional.map(realmStage -> ServiceResult.success("Realm stage retrieved successfully", realmStage))
                 .orElseGet(() -> ServiceResult.failure("Realm stage not found"));

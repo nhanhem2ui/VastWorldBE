@@ -24,6 +24,9 @@ public class Item {
     @JoinColumn(name = "ItemTypeId", nullable = false)
     private ItemType itemType;
 
+    @Column(name = "ImageUrl", nullable = false)
+    private  String imageUrl;
+
     @Column(name = "MaxUsageCount")
     private Integer maxUsageCount;
 
