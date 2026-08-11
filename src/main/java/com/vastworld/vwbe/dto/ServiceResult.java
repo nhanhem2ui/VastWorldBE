@@ -29,8 +29,17 @@ public class ServiceResult<T> {
         return result;
     }
 
+    @Deprecated
+    public static <T> ServiceResult<T> success(String message, T data) {
+        return success(message, data, HttpStatus.OK);
+    }
+
     public static <T> ServiceResult<T> success(String message, HttpStatus status) {
         return success(message, null, status);
+    }
+
+    public static <T> ServiceResult<T> success(String message) {
+        return success(message, null, HttpStatus.NO_CONTENT);
     }
 
     public static <T> ServiceResult<T> failure(String message, @Nullable HttpStatus status) {

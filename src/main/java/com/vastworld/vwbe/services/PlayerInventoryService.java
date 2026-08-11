@@ -8,6 +8,7 @@ import com.vastworld.vwbe.entites.PlayerInventory;
 import com.vastworld.vwbe.repositories.ItemRepository;
 import com.vastworld.vwbe.repositories.PlayerInventoryRepository;
 import com.vastworld.vwbe.repositories.PlayerRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,7 @@ public class PlayerInventoryService {
                     .map(this::toDto)
                     .toList();
 
-            return ServiceResult.success("Player inventory retrieved successfully", dtoList);
+            return ServiceResult.success("Player inventory retrieved successfully", dtoList, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player inventory", ex);
         }
@@ -57,7 +58,7 @@ public class PlayerInventoryService {
                 return ServiceResult.failure("Player inventory not found");
             }
 
-            return ServiceResult.success("Player inventory retrieved successfully", toDto(playerInventory.get()));
+            return ServiceResult.success("Player inventory retrieved successfully", toDto(playerInventory.get()), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player inventory", ex);
         }
@@ -79,7 +80,7 @@ public class PlayerInventoryService {
             applyDto(playerInventory, dto, referencesResult.getData());
 
             var savedPlayerInventory = playerInventoryRepository.save(playerInventory);
-            return ServiceResult.success("Player inventory created successfully", toDto(savedPlayerInventory));
+            return ServiceResult.success("Player inventory created successfully", toDto(savedPlayerInventory), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error creating player inventory", ex);
         }
@@ -110,7 +111,7 @@ public class PlayerInventoryService {
             applyDto(playerInventory, dto, referencesResult.getData());
 
             var updatedPlayerInventory = playerInventoryRepository.save(playerInventory);
-            return ServiceResult.success("Player inventory updated successfully", toDto(updatedPlayerInventory));
+            return ServiceResult.success("Player inventory updated successfully", toDto(updatedPlayerInventory), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error updating player inventory", ex);
         }
@@ -127,7 +128,7 @@ public class PlayerInventoryService {
             }
 
             playerInventoryRepository.deleteById(id);
-            return ServiceResult.success("Player inventory deleted successfully");
+            return ServiceResult.success("Player inventory deleted successfully", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {
             return ServiceResult.failure("Error deleting player inventory", ex);
         }
@@ -144,7 +145,7 @@ public class PlayerInventoryService {
             return ServiceResult.failure("Item not found");
         }
 
-        return ServiceResult.success("Player inventory references resolved", new PlayerInventoryReferences(player.get(), item.get()));
+        return ServiceResult.success("Player inventory references resolved", new PlayerInventoryReferences(player.get(), item.get()), HttpStatus.OK);
     }
 
     private void applyDto(PlayerInventory playerInventory, PlayerInventoryDTO dto, PlayerInventoryReferences references) {

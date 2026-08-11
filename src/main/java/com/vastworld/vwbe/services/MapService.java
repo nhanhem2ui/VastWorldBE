@@ -3,8 +3,11 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.listeners.PlayerTravelEvent;
 import com.vastworld.vwbe.dto.map.*;
+import com.vastworld.vwbe.listeners.QuestEventListener;
 import com.vastworld.vwbe.repositories.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +24,12 @@ public class MapService {
     private final MapInteractableRepository mapInteractableRepository;
     private final PlayerService playerService;
     private final RedisService redisService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MapService(MapTileRepository mapTileRepository, MapRepository mapRepository,
                       RedisService redisService, PlayerService playerService,
                       PlayerLocationRepository playerLocationRepository, MapDecorationRepository mapDecorationRepository,
-                      MapInteractableRepository mapInteractableRepository) {
+                      MapInteractableRepository mapInteractableRepository, ApplicationEventPublisher eventPublisher) {
         this.mapTileRepository = mapTileRepository;
         this.mapRepository = mapRepository;
         this.redisService = redisService;
@@ -33,6 +37,7 @@ public class MapService {
         this.playerLocationRepository = playerLocationRepository;
         this.mapDecorationRepository = mapDecorationRepository;
         this.mapInteractableRepository = mapInteractableRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public ServiceResult<GetMapResponse> getMap(Integer mapId) {
@@ -154,7 +159,6 @@ public class MapService {
 
     public ServiceResult<Void> travel(TravelRequest request) {
         try {
-
             var playerLocationOptional = playerLocationRepository.findByPlayer_Id(request.playerId());
             if (playerLocationOptional.isEmpty()) {
                 return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
@@ -162,9 +166,10 @@ public class MapService {
 
             var playerLocation = playerLocationOptional.get();
 
-            if (playerLocation.getX().equals(request.x()) && playerLocation.getY().equals(request.y())) {
+            if (playerLocation.getX().equals(request.x()) && playerLocation.getY().equals(request.y()) && playerLocation.getCurrentMap().getMapId().equals(request.mapId())) {
                 return ServiceResult.failure("Coordinates are the same", HttpStatus.BAD_REQUEST);
             }
+
             var mapOptional = mapRepository.findById(request.mapId());
             if (mapOptional.isEmpty()) {
                 return ServiceResult.failure("Map not found",  HttpStatus.NOT_FOUND);
@@ -177,6 +182,8 @@ public class MapService {
             playerLocation.setX(request.x());
             playerLocation.setY(request.y());
             playerLocationRepository.save(playerLocation);
+
+            eventPublisher.publishEvent(new PlayerTravelEvent(request.playerId(), request.mapId(), request.x(), request.y()));
 
             return ServiceResult.success("Travelled to destination", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {

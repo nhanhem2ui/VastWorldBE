@@ -4,6 +4,7 @@ import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.itemtype.ItemTypeDTO;
 import com.vastworld.vwbe.entites.ItemType;
 import com.vastworld.vwbe.repositories.ItemTypeRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class ItemTypeService {
                     .map(this::toDto)
                     .toList();
 
-            return ServiceResult.success("Item type retrieved successfully", dtoList);
+            return ServiceResult.success("Item type retrieved successfully", dtoList, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving item type", ex);
         }
@@ -47,7 +48,7 @@ public class ItemTypeService {
                 return ServiceResult.failure("Item type not found");
             }
 
-            return ServiceResult.success("Item type retrieved successfully", toDto(itemType.get()));
+            return ServiceResult.success("Item type retrieved successfully", toDto(itemType.get()), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving item type", ex);
         }
@@ -68,7 +69,7 @@ public class ItemTypeService {
             itemType.setName(dto.name().trim());
 
             var savedItemType = itemTypeRepository.save(itemType);
-            return ServiceResult.success("Item type created successfully", toDto(savedItemType));
+            return ServiceResult.success("Item type created successfully", toDto(savedItemType), HttpStatus.CREATED);
         } catch (Exception ex) {
             return ServiceResult.failure("Error creating item type", ex);
         }
@@ -98,7 +99,7 @@ public class ItemTypeService {
             itemType.setName(dto.name().trim());
 
             var updatedItemType = itemTypeRepository.save(itemType);
-            return ServiceResult.success("Item type updated successfully", toDto(updatedItemType));
+            return ServiceResult.success("Item type updated successfully", toDto(updatedItemType), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error updating item type", ex);
         }
@@ -115,7 +116,7 @@ public class ItemTypeService {
             }
 
             itemTypeRepository.deleteById(id);
-            return ServiceResult.success("Item type deleted successfully");
+            return ServiceResult.success("Item type deleted successfully", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {
             return ServiceResult.failure("Error deleting item type", ex);
         }

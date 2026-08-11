@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.entites;
 
-import com.vastworld.vwbe.common.enums.AssetType;
+import com.vastworld.vwbe.enums.AssetType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

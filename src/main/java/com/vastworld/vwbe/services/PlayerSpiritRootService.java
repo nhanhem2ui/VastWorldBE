@@ -1,6 +1,5 @@
 package com.vastworld.vwbe.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.playerspiritroot.PlayerSpiritRootDTO;
@@ -11,14 +10,11 @@ import com.vastworld.vwbe.entites.SpiritRoot;
 import com.vastworld.vwbe.repositories.PlayerRepository;
 import com.vastworld.vwbe.repositories.PlayerSpiritRootRepository;
 import com.vastworld.vwbe.repositories.SpiritRootRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -47,7 +43,7 @@ public class PlayerSpiritRootService {
                     .map(this::toDto)
                     .toList();
 
-            return ServiceResult.success("Player spirit root retrieved successfully", dtoList);
+            return ServiceResult.success("Player spirit root retrieved successfully", dtoList, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player spirit root", ex);
         }
@@ -71,7 +67,7 @@ public class PlayerSpiritRootService {
                     .map(spiritRoot -> spiritRoot.getSpiritRoot().getName())
                     .toList();
             redisService.set(cacheKey, data);
-            return ServiceResult.success("Player spirit root retrieved successfully", data);
+            return ServiceResult.success("Player spirit root retrieved successfully", data, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player spirit root", ex);
         }
@@ -95,7 +91,7 @@ public class PlayerSpiritRootService {
                     .map(this::toDto)
                     .toList();
 
-            return ServiceResult.success("Player spirit root retrieved successfully", data);
+            return ServiceResult.success("Player spirit root retrieved successfully", data, HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error retrieving player spirit root", ex);
         }
@@ -170,7 +166,7 @@ public class PlayerSpiritRootService {
                     savedSpiritRoots
             );
 
-            return ServiceResult.success("Spirit root rolled successfully", result);
+            return ServiceResult.success("Spirit root rolled successfully", result, HttpStatus.OK);
         }
         catch (Exception ex) {
             return ServiceResult.failure("Error rolling spirit root", ex);
@@ -198,7 +194,7 @@ public class PlayerSpiritRootService {
             playerSpiritRoot.setSpiritRoot(referencesResult.getData().spiritRoot());
 
             var savedPlayerSpiritRoot = playerSpiritRootRepository.save(playerSpiritRoot);
-            return ServiceResult.success("Player spirit root created successfully", toDto(savedPlayerSpiritRoot));
+            return ServiceResult.success("Player spirit root created successfully", toDto(savedPlayerSpiritRoot), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error creating player spirit root", ex);
         }
@@ -234,7 +230,7 @@ public class PlayerSpiritRootService {
             playerSpiritRoot.setSpiritRoot(referencesResult.getData().spiritRoot());
 
             var updatedPlayerSpiritRoot = playerSpiritRootRepository.save(playerSpiritRoot);
-            return ServiceResult.success("Player spirit root updated successfully", toDto(updatedPlayerSpiritRoot));
+            return ServiceResult.success("Player spirit root updated successfully", toDto(updatedPlayerSpiritRoot), HttpStatus.OK);
         } catch (Exception ex) {
             return ServiceResult.failure("Error updating player spirit root", ex);
         }
@@ -251,7 +247,7 @@ public class PlayerSpiritRootService {
             }
 
             playerSpiritRootRepository.deleteById(id);
-            return ServiceResult.success("Player spirit root deleted successfully");
+            return ServiceResult.success("Player spirit root deleted successfully", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {
             return ServiceResult.failure("Error deleting player spirit root", ex);
         }
@@ -269,7 +265,7 @@ public class PlayerSpiritRootService {
             return ServiceResult.failure("Spirit root not found");
         }
 
-        return ServiceResult.success("Player spirit root references resolved", new PlayerSpiritRootReferences(player.get(), spiritRoot.get()));
+        return ServiceResult.success("Player spirit root references resolved", new PlayerSpiritRootReferences(player.get(), spiritRoot.get()), HttpStatus.OK);
     }
 
     private PlayerSpiritRootDTO toDto(PlayerSpiritRoot playerSpiritRoot) {

@@ -1,7 +1,6 @@
-package com.vastworld.vwbe.common.enums;
+package com.vastworld.vwbe.enums;
 
 public enum MapInteractableTypes {
     HOME,
     BLACKSMITH,
-
 }
