@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -22,6 +25,10 @@ public class RedisService {
         this.redis = redis;
         this.objectMapper = objectMapper;
     }
+
+    // increments the value of KEYS[1] by 1.
+    // If the key does not exist yet, creates it then increments it to 1.
+    // The new value is stored in variable named current
     private static final RedisScript<Long> INCR_WITH_EXPIRE = RedisScript.of("""
     local current = redis.call('INCR', KEYS[1])
     if tonumber(current) == 1 then
@@ -59,7 +66,13 @@ public class RedisService {
     }
 
     public long incrementWithExpiry(String key, Duration window) {
-        Long result = redis.execute(INCR_WITH_EXPIRE, List.of(key), String.valueOf(window.toMillis()));
+        Long result = redis.execute(
+                INCR_WITH_EXPIRE,
+                new StringRedisSerializer(),   // args
+                new GenericToStringSerializer<>(Long.class), // result
+                List.of(key),
+                String.valueOf(window.toMillis())
+        );
         return result == null ? 0 : result;
     }
 
