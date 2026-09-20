@@ -1,6 +1,9 @@
 package com.vastworld.vwbe.services;
 
+import com.vastworld.vwbe.common.GameBalance;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.playerinventory.AddToInventoryRequest;
+import com.vastworld.vwbe.dto.playerinventory.GetPlayerInventoryResponse;
 import com.vastworld.vwbe.dto.playerinventory.PlayerInventoryDTO;
 import com.vastworld.vwbe.entites.Item;
 import com.vastworld.vwbe.entites.Player;
@@ -12,178 +15,117 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
 public class PlayerInventoryService {
     private final PlayerInventoryRepository playerInventoryRepository;
-    private final PlayerRepository playerRepository;
+    private final PlayerService playerService;
     private final ItemRepository itemRepository;
 
     public PlayerInventoryService(
             PlayerInventoryRepository playerInventoryRepository,
-            PlayerRepository playerRepository,
+            PlayerService playerService,
             ItemRepository itemRepository) {
         this.playerInventoryRepository = playerInventoryRepository;
-        this.playerRepository = playerRepository;
+        this.playerService = playerService;
         this.itemRepository = itemRepository;
     }
 
-    public ServiceResult<List<PlayerInventoryDTO>> getAllPlayerInventories() {
+    public ServiceResult<List<GetPlayerInventoryResponse>> getPlayerInventory(UUID playerId) {
         try {
-            var playerInventoryList = playerInventoryRepository.findAll();
-            if (playerInventoryList.isEmpty()) {
-                return ServiceResult.failure("No player inventory found");
+            var playerEntity = playerService.getPlayerEntityById(playerId).getData();
+            var playerInventory = playerInventoryRepository.findByPlayer_Id(playerId);
+
+            int requiredSlots = GameBalance.INVENTORY_SLOT;
+            int currentSlots = playerInventory.size();
+
+            if (currentSlots < requiredSlots) {
+                var missingSlots = new ArrayList<PlayerInventory>();
+                for (int i = currentSlots; i < requiredSlots; i++) {
+                    var slot = new PlayerInventory();
+                    slot.setPlayer(playerEntity);
+                    missingSlots.add(slot);
+                }
+                // Add the newly created slots to the current list
+                playerInventoryRepository.saveAll(missingSlots);
+                playerInventory.addAll(missingSlots);
             }
 
-            var dtoList = playerInventoryList.stream()
-                    .map(this::toDto)
-                    .toList();
+            var data = new ArrayList<GetPlayerInventoryResponse>();
+            for (var slot : playerInventory) {
+                var dataSlot = new GetPlayerInventoryResponse(slot.getItem() == null ? null : slot.getItem().getId(), slot.getItem() == null ? null : slot.getItem().getImageUrl(), slot.getQuantity() == null ? 0 : slot.getQuantity());
+                data.add(dataSlot);
+            }
 
-            return ServiceResult.success("Player inventory retrieved successfully", dtoList, HttpStatus.OK);
+            return ServiceResult.success("Success", data, HttpStatus.OK);
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player inventory", ex);
+            return ServiceResult.failure("Error getting inventory", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public ServiceResult<PlayerInventoryDTO> getPlayerInventoryById(Long id) {
+    public ServiceResult<Void> addToInventory(AddToInventoryRequest request, UUID playerId) {
         try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Player inventory id is invalid");
+            if (request == null || request.itemId() == null) {
+                return ServiceResult.failure("Item id is required");
             }
 
-            var playerInventory = playerInventoryRepository.findById(id);
+            if (request.quantity() == null || request.quantity() <= 0) {
+                return ServiceResult.failure("Quantity must be greater than 0");
+            }
+
+            var playerEntity = playerService
+                    .getPlayerEntityById(playerId)
+                    .getData();
+
+            if (playerEntity == null) {
+                return ServiceResult.failure("Player not found");
+            }
+
+            var item = itemRepository.findById(request.itemId());
+
+            if (item.isEmpty()) {
+                return ServiceResult.failure("Item not found");
+            }
+
+            Item itemEntity = item.get();
+
+            var playerInventory = playerInventoryRepository.findByPlayer_Id(playerId);
+
             if (playerInventory.isEmpty()) {
-                return ServiceResult.failure("Player inventory not found");
+                return ServiceResult.failure("Player inventory not found", HttpStatus.NOT_FOUND);
             }
 
-            return ServiceResult.success("Player inventory retrieved successfully", toDto(playerInventory.get()), HttpStatus.OK);
+            for (var slot : playerInventory) {
+                if (slot.getItem() != null && slot.getItem().getId().equals(itemEntity.getId())) {
+                    int currentQuantity = slot.getQuantity() == null ? 0 : slot.getQuantity();
+
+                    slot.setQuantity(currentQuantity + request.quantity());
+
+                    playerInventoryRepository.save(slot);
+
+                    return ServiceResult.success("Item added to inventory successfully", HttpStatus.NO_CONTENT);
+                }
+            }
+
+            for (var slot : playerInventory) {
+                if (slot.getItem() == null) {
+                    slot.setItem(itemEntity);
+                    slot.setQuantity(request.quantity());
+
+                    playerInventoryRepository.save(slot);
+
+                    return ServiceResult.success("Item added to inventory successfully", HttpStatus.NO_CONTENT);
+                }
+            }
+
+            return ServiceResult.failure("Inventory is full", HttpStatus.BAD_REQUEST);
+
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player inventory", ex);
+            return ServiceResult.failure("Error adding item to inventory", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public ServiceResult<PlayerInventoryDTO> createPlayerInventory(PlayerInventoryDTO dto) {
-        try {
-            var validationResult = validateDto(dto);
-            if (validationResult != null) {
-                return validationResult;
-            }
-
-            var referencesResult = resolveReferences(dto);
-            if (!referencesResult.isSuccess()) {
-                return ServiceResult.failure(referencesResult.getMessage());
-            }
-
-            PlayerInventory playerInventory = new PlayerInventory();
-            applyDto(playerInventory, dto, referencesResult.getData());
-
-            var savedPlayerInventory = playerInventoryRepository.save(playerInventory);
-            return ServiceResult.success("Player inventory created successfully", toDto(savedPlayerInventory), HttpStatus.OK);
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error creating player inventory", ex);
-        }
-    }
-
-    public ServiceResult<PlayerInventoryDTO> updatePlayerInventory(Long id, PlayerInventoryDTO dto) {
-        try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Player inventory id is invalid");
-            }
-
-            var validationResult = validateDto(dto);
-            if (validationResult != null) {
-                return validationResult;
-            }
-
-            var playerInventoryOptional = playerInventoryRepository.findById(id);
-            if (playerInventoryOptional.isEmpty()) {
-                return ServiceResult.failure("Player inventory not found");
-            }
-
-            var referencesResult = resolveReferences(dto);
-            if (!referencesResult.isSuccess()) {
-                return ServiceResult.failure(referencesResult.getMessage());
-            }
-
-            var playerInventory = playerInventoryOptional.get();
-            applyDto(playerInventory, dto, referencesResult.getData());
-
-            var updatedPlayerInventory = playerInventoryRepository.save(playerInventory);
-            return ServiceResult.success("Player inventory updated successfully", toDto(updatedPlayerInventory), HttpStatus.OK);
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error updating player inventory", ex);
-        }
-    }
-
-    public ServiceResult<Void> deletePlayerInventory(Long id) {
-        try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Player inventory id is invalid");
-            }
-
-            if (!playerInventoryRepository.existsById(id)) {
-                return ServiceResult.failure("Player inventory not found");
-            }
-
-            playerInventoryRepository.deleteById(id);
-            return ServiceResult.success("Player inventory deleted successfully", HttpStatus.NO_CONTENT);
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error deleting player inventory", ex);
-        }
-    }
-
-    private ServiceResult<PlayerInventoryReferences> resolveReferences(PlayerInventoryDTO dto) {
-        var player = playerRepository.findById(dto.playerId());
-        if (player.isEmpty()) {
-            return ServiceResult.failure("Player not found");
-        }
-
-        var item = itemRepository.findById(dto.itemId());
-        if (item.isEmpty()) {
-            return ServiceResult.failure("Item not found");
-        }
-
-        return ServiceResult.success("Player inventory references resolved", new PlayerInventoryReferences(player.get(), item.get()), HttpStatus.OK);
-    }
-
-    private void applyDto(PlayerInventory playerInventory, PlayerInventoryDTO dto, PlayerInventoryReferences references) {
-        playerInventory.setPlayer(references.player());
-        playerInventory.setItem(references.item());
-        playerInventory.setQuantity(dto.quantity());
-    }
-
-    private PlayerInventoryDTO toDto(PlayerInventory playerInventory) {
-        return new PlayerInventoryDTO(
-                playerInventory.getId(),
-                playerInventory.getPlayer().getId(),
-                playerInventory.getItem().getId(),
-                playerInventory.getItem().getName(),
-                playerInventory.getQuantity()
-        );
-    }
-
-    private ServiceResult<PlayerInventoryDTO> validateDto(PlayerInventoryDTO dto) {
-        if (dto == null) {
-            return ServiceResult.failure("Player inventory data is required");
-        }
-
-        if (dto.playerId() == null) {
-            return ServiceResult.failure("Player id is invalid");
-        }
-
-        if (dto.itemId() == null) {
-            return ServiceResult.failure("Item id is invalid");
-        }
-
-        if (dto.quantity() == null || dto.quantity() <= 0) {
-            return ServiceResult.failure("Quantity must be greater than 0");
-        }
-
-        return null;
-    }
-
-    private record PlayerInventoryReferences(Player player, Item item) {
     }
 }

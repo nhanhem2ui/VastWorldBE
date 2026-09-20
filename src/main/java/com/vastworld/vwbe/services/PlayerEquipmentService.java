@@ -11,8 +11,6 @@ import com.vastworld.vwbe.repositories.PlayerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @Transactional
 public class PlayerEquipmentService {
@@ -27,23 +25,6 @@ public class PlayerEquipmentService {
         this.playerEquipmentRepository = playerEquipmentRepository;
         this.playerRepository = playerRepository;
         this.playerInventoryRepository = playerInventoryRepository;
-    }
-
-    public ServiceResult<List<PlayerEquipmentDTO>> getAllPlayerEquipments() {
-        try {
-            var playerEquipmentList = playerEquipmentRepository.findAll();
-            if (playerEquipmentList.isEmpty()) {
-                return ServiceResult.failure("No player equipment found");
-            }
-
-            var dtoList = playerEquipmentList.stream()
-                    .map(this::toDto)
-                    .toList();
-
-            return ServiceResult.success("Player equipment retrieved successfully", dtoList);
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player equipment", ex);
-        }
     }
 
     public ServiceResult<PlayerEquipmentDTO> getPlayerEquipmentById(Long id) {
@@ -62,6 +43,8 @@ public class PlayerEquipmentService {
             return ServiceResult.failure("Error retrieving player equipment", ex);
         }
     }
+
+
 
     public ServiceResult<PlayerEquipmentDTO> createPlayerEquipment(PlayerEquipmentDTO dto) {
         try {
@@ -132,22 +115,6 @@ public class PlayerEquipmentService {
         }
     }
 
-    public ServiceResult<Void> deletePlayerEquipment(Long id) {
-        try {
-            if (id == null || id <= 0) {
-                return ServiceResult.failure("Player equipment id is invalid");
-            }
-
-            if (!playerEquipmentRepository.existsById(id)) {
-                return ServiceResult.failure("Player equipment not found");
-            }
-
-            playerEquipmentRepository.deleteById(id);
-            return ServiceResult.success("Player equipment deleted successfully");
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error deleting player equipment", ex);
-        }
-    }
 
     private ServiceResult<PlayerEquipmentReferences> resolveReferences(PlayerEquipmentDTO dto) {
         var player = playerRepository.findById(dto.playerId());

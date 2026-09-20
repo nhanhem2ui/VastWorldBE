@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.repositories;
 
 import com.vastworld.vwbe.entites.PlayerQuest;
+import com.vastworld.vwbe.enums.quests.PlayerQuestStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,5 +12,8 @@ public interface PlayerQuestRepository extends JpaRepository<PlayerQuest, Intege
 
     @EntityGraph(attributePaths = {"quest"})
     List<PlayerQuest> findByPlayer_Id(UUID id);
+
+    @EntityGraph(attributePaths = {"quest"})
+    List<PlayerQuest> findByPlayer_IdAndStatus(UUID id, PlayerQuestStatus status);
 
 }

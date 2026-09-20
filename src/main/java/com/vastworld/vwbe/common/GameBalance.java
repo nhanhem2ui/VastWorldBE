@@ -7,6 +7,8 @@ public final class GameBalance {
 
     private GameBalance() {}
 
+    public static final int INVENTORY_SLOT = 30;
+
     /**
      * TIME
      * 1 Real Hour = 1 Game Year
@@ -52,6 +54,45 @@ public final class GameBalance {
             5000000,    // 16 Đại La
             50000000,   // 17 Đạo Tổ
             Integer.MAX_VALUE // 18 Thiên Đạo
+    };
+
+    public static final double BASE_BREAKTHROUGH_CHANCE = 0.5D;
+
+    public static final double MIN_BREAKTHROUGH_CHANCE = 0.0001D;
+    public static final double MAX_BREAKTHROUGH_CHANCE = 1D;
+
+    private static final double[] REALM_BREAKTHROUGH_CHANCE_MODIFIER = {
+            0.7D, // Luyen Khi
+            0.6D, // Truc Co
+            0.55D, // Kim Dan
+            0.52D, // Nguyen Anh
+            0.5D, // Hoa Than
+            0.45D,
+            0.42D,
+            0.4D,
+            0.35D,
+            0.32D,
+            0.3D,
+            0.25D,
+            0.22D,
+            0.2D,
+            0.15D,
+            0.1D,
+            0.01D,
+            0.001D
+    };
+
+    private static final double[] STAGE_BREAKTHROUGH_CHANCE_MODIFIER = {
+            1.00D,
+            0.98D,
+            0.96D,
+            0.94D,
+            0.92D,
+            0.90D,
+            0.88D,
+            0.86D,
+            0.84D,
+            0.70D
     };
 
     /**
@@ -108,5 +149,21 @@ public final class GameBalance {
             return stageId + 1;
         }
         return 1;
+    }
+
+    public static double getBreakthroughChance(int realmId, int stageId,
+            double spiritRootMultiplier, double buffMultiplier
+    ) {
+        double realmModifier = REALM_BREAKTHROUGH_CHANCE_MODIFIER[realmId - 1];
+
+        double stageModifier = STAGE_BREAKTHROUGH_CHANCE_MODIFIER[stageId - 1];
+
+        double chance = BASE_BREAKTHROUGH_CHANCE
+                        * spiritRootMultiplier
+                        * realmModifier
+                        * stageModifier
+                        * buffMultiplier;
+
+        return Math.clamp(chance, MIN_BREAKTHROUGH_CHANCE, MAX_BREAKTHROUGH_CHANCE);
     }
 }

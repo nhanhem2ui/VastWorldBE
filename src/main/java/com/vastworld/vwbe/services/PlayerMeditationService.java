@@ -302,8 +302,8 @@ public class PlayerMeditationService {
 
         sumPointPerMins += Math.round(sumPointPerMins + getCpPlayerCultivationSpeed(playerId));
 
-        var cpSpiritRoot = getCpPlayerSpiritRoot(playerId);
-        sumPointPerMins += cpSpiritRoot;
+        var cpSpiritRoot = getPlayerSpiritRoot(playerId);
+        sumPointPerMins *= cpSpiritRoot;
 
         return sumPointPerMins;
     }
@@ -312,12 +312,12 @@ public class PlayerMeditationService {
        return (long) Math.ceil(playerService.getPlayerById(playerId).getData().cultivationSpeed());
     }
 
-    private Double getCpPlayerSpiritRoot(UUID playerId){
+    private Double getPlayerSpiritRoot(UUID playerId){
         var spiritRoots = playerSpiritRootService
                 .getPlayerSpiritRootEntityById(playerId)
                 .getData();
 
-        switch (spiritRoots.size()) {
+            switch (spiritRoots.size()) {
             case 5:
                 return GameBalance.FIVE_SPIRIT_ROOT;
             case 4:

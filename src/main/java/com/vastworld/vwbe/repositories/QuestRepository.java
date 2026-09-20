@@ -11,6 +11,4 @@ public interface QuestRepository extends JpaRepository<Quest, Integer> {
     @EntityGraph(attributePaths = {"prerequisiteQuest"})
     @Query("SELECT q FROM Quest q WHERE q.requiredRealm.realmOrder <= ?1 OR q.requiredRealm IS NULL")
     List<Quest> findUnlockedByRealm(Integer realmOrder);
-
-
 }
