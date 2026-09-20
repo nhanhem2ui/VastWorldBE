@@ -47,3 +47,15 @@ INSERT INTO [dbo].[QuestObjectives]
 		   (5, 'LEVEL_UP', N'Đạt Kim Đan tiền kỳ', NULL, NULL, NULL, 3, 1, NULL, NULL, NULL),
 		   (6, 'LEVEL_UP', N'Đạt Kim Đan hậu kỳ', NULL, NULL, NULL, 3, 7, NULL, NULL, NULL)
 GO
+
+INSERT INTO [dbo].[QuestRewards]
+           ([QuestId]
+           ,[RewardType]
+           ,[Amount]
+           ,[ItemId]
+           ,[SkillId])
+     VALUES
+           (1, 'SPIRIT_STONE', 500, NULL, NULL),
+		   (2, 'SPIRIT_STONE', 1000, NULL, NULL)
+GO
+

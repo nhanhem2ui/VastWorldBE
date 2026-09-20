@@ -20,9 +20,9 @@ public class PlayerInventory {
     private Player player;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ItemId", nullable = false)
+    @JoinColumn(name = "ItemId")
     private Item item;
 
-    @Column(name = "Quantity", nullable = false)
-    private Integer quantity = 1;
+    @Column(name = "Quantity")
+    private Integer quantity;
 }

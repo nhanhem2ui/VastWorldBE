@@ -1,6 +1,5 @@
 package com.vastworld.vwbe.entites;
 
-import com.vastworld.vwbe.services.CultivationRealmService;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,4 +39,7 @@ public class Quest {
 
     @Column(name = "MaxCompletions")
     private Integer maxCompletions;
+
+    @Column(name = "CompletedImageUrl")
+    private String completedImageUrl;
 }

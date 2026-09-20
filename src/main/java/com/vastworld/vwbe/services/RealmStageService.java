@@ -68,7 +68,7 @@ public class RealmStageService {
 
     public ServiceResult<RealmStage> getRealmStageEntityById(Integer id){
         if (id == null || id <= 0) {
-            return ServiceResult.failure("Realm stage id is invalid");
+            return ServiceResult.failure("Realm stage id is invalid", HttpStatus.BAD_REQUEST);
         }
         var realmStageOptional = realmStageRepository.findById(id);
         return realmStageOptional.map(realmStage -> ServiceResult.success("Realm stage retrieved successfully", realmStage))

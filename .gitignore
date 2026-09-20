@@ -37,3 +37,4 @@ sql.sql
 setup.txt
 maptiles.sql
 src/main/resources/keystore.p12
+quests.sql

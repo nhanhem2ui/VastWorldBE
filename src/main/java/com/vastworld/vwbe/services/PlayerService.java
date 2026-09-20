@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.common.GameBalance;
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.listeners.PLayerLeveledUpEvent;
 import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
@@ -12,6 +13,7 @@ import com.vastworld.vwbe.entites.Player;
 import com.vastworld.vwbe.entites.PlayerLocation;
 import com.vastworld.vwbe.enums.RealmEnum;
 import com.vastworld.vwbe.repositories.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,12 +33,16 @@ public class PlayerService {
     private final PlayerLocationRepository playerLocationRepository;
     private final RedisService redisService;
     private final MapRepository mapRepository;
+    private final PlayerSpiritRootService  playerSpiritRootService;
+    private final SpiritRootService spiritRootService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PlayerService(PlayerRepository playerRepository, AccountRepository accountRepository,
                          CultivationRealmRepository cultivationRealmRepository, RealmStageRepository realmStageRepository,
                          RedisService redisService, CultivationRealmService cultivationRealmService,
                          RealmStageService realmStageService, PlayerLocationRepository playerLocationRepository,
-                         MapRepository mapRepository) {
+                         MapRepository mapRepository, PlayerSpiritRootService playerSpiritRootService,
+                         SpiritRootService spiritRootService, ApplicationEventPublisher eventPublisher) {
         this.playerRepository = playerRepository;
         this.accountRepository = accountRepository;
         this.cultivationRealmRepository = cultivationRealmRepository;
@@ -46,6 +52,9 @@ public class PlayerService {
         this.realmStageService = realmStageService;
         this.playerLocationRepository = playerLocationRepository;
         this.mapRepository = mapRepository;
+        this.playerSpiritRootService = playerSpiritRootService;
+        this.spiritRootService = spiritRootService;
+        this.eventPublisher = eventPublisher;
     }
 
     public ServiceResult<List<PlayerDTO>> getAllPlayers() {
@@ -109,13 +118,13 @@ public class PlayerService {
 
     public ServiceResult<GetPlayerNextBreakthroughResponse> getPlayerNextBreakthrough(UUID playerId) {
         if (playerId == null) {
-            return ServiceResult.failure("PlayerId not found");
+            return ServiceResult.failure("PlayerId not found", HttpStatus.NOT_FOUND);
         }
         try {
             var playerResult = getPlayerEntityById(playerId);
 
             if (!playerResult.isSuccess()) {
-                return ServiceResult.failure(playerResult.getMessage());
+                return ServiceResult.failure(playerResult.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             var player = playerResult.getData();
@@ -123,7 +132,7 @@ public class PlayerService {
             if (player.getRealmId() >= RealmEnum.values().length
                     && player.getRealmStage() >= GameBalance.STAGES_PER_REALM) {
 
-                return ServiceResult.failure("Player has reached the maximum realm");
+                return ServiceResult.success("Player has reached the maximum realm",  HttpStatus.NO_CONTENT);
             }
 
             var nextRealmAndStage = getNextRealmAndStageId(player.getRealmId(), player.getRealmStage());
@@ -132,7 +141,29 @@ public class PlayerService {
 
             long breakthroughPoints = GameBalance.getBreakthroughCpPoints(nextRealmAndStage.realmId, nextRealmAndStage.stageId);
 
-            var chanceOfSuccess = 0F;
+            var playerSpiritRoots = playerSpiritRootService.getPlayerSpiritRootEntityById(playerId).getData();
+
+            var rootBonus = switch (playerSpiritRoots.size()) {
+                case 5 -> GameBalance.FIVE_SPIRIT_ROOT;
+                case 4 -> GameBalance.FOUR_SPIRIT_ROOT;
+                case 2 -> GameBalance.TWO_SPIRIT_ROOT;
+                case 1 -> {
+                    var root = spiritRootService.getSpiritRootById(
+                            playerSpiritRoots.getFirst().spiritRootId()
+                    );
+
+                    var data = root.getData();
+
+                    yield data.isVariant()
+                            ? GameBalance.VARIANT_SPIRIT_ROOT
+                            : GameBalance.HEAVENLY_SPIRIT_ROOT;
+                }
+                default -> GameBalance.THREE_SPIRIT_ROOT;
+            };
+
+            //TODO: Add bonus chances
+
+            var chanceOfSuccess = GameBalance.getBreakthroughChance(player.getRealmId(), player.getRealmStage(), rootBonus, 1D);
 
             var response = new GetPlayerNextBreakthroughResponse(
                     isTribulation,
@@ -141,7 +172,7 @@ public class PlayerService {
             );
             return ServiceResult.success("Next breakthrough retrieved", response, HttpStatus.OK);
         } catch (Exception ex) {
-            return ServiceResult.failure(ex.getMessage());
+            return ServiceResult.failure(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -153,13 +184,13 @@ public class PlayerService {
 
     public ServiceResult<Void> startBreakthrough(UUID playerId) {
         if (playerId == null) {
-            return ServiceResult.failure("PlayerId not found");
+            return ServiceResult.failure("PlayerId not found", HttpStatus.NOT_FOUND);
         }
         var cacheKey = CacheKeys.players("dto", playerId);
         try {
             var playerResult = getPlayerEntityById(playerId);
             if (!playerResult.isSuccess() || playerResult.getData() == null) {
-                return ServiceResult.failure("Player not found");
+                return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
             }
             Player player = playerResult.getData();
 
@@ -180,7 +211,7 @@ public class PlayerService {
 
             if (Boolean.TRUE.equals(nextBreakthrough.isTribulation())) {
                 // TODO: Trigger Tribulation combat/event logic here
-                 playerRepository.save(player);
+                playerRepository.save(player);
                 redisService.delete(cacheKey);
                 return ServiceResult.success("Tribulation triggered! Prepare for lightning strikes.");
             } else {
@@ -190,6 +221,9 @@ public class PlayerService {
 
                     playerRepository.save(player);
                     redisService.delete(cacheKey);
+
+                    eventPublisher.publishEvent(new PLayerLeveledUpEvent(playerId));
+
                     return ServiceResult.success("Breakthrough successfully completed!");
                 } else {
                     playerRepository.save(player);

@@ -171,9 +171,9 @@ public class QuestService {
         }
     }
 
-    public ServiceResult<List<GetAcceptedQuestsResponse>> getAcceptedQuests(UUID playerId){
-
-    }
+//    public ServiceResult<List<GetAcceptedQuestsResponse>> getAcceptedQuests(UUID playerId){
+//
+//    }
 
     public ServiceResult<Void> acceptQuest(AcceptQuestRequest request) {
         try{

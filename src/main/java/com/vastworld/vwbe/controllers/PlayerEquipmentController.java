@@ -24,12 +24,6 @@ public class PlayerEquipmentController {
         this.playerEquipmentService = playerEquipmentService;
     }
 
-    @GetMapping
-    public ResponseEntity<ServiceResult<List<PlayerEquipmentDTO>>> getAllPlayerEquipments() {
-        var result = playerEquipmentService.getAllPlayerEquipments();
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ServiceResult<PlayerEquipmentDTO>> getPlayerEquipmentById(@PathVariable Long id) {
         var result = playerEquipmentService.getPlayerEquipmentById(id);
@@ -47,12 +41,6 @@ public class PlayerEquipmentController {
             @PathVariable Long id,
             @RequestBody PlayerEquipmentDTO dto) {
         var result = playerEquipmentService.updatePlayerEquipment(id, dto);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceResult<Void>> deletePlayerEquipment(@PathVariable Long id) {
-        var result = playerEquipmentService.deletePlayerEquipment(id);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 }
