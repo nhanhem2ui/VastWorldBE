@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PlayerQuestRepository extends JpaRepository<PlayerQuest, Integer> {
@@ -16,4 +17,5 @@ public interface PlayerQuestRepository extends JpaRepository<PlayerQuest, Intege
     @EntityGraph(attributePaths = {"quest"})
     List<PlayerQuest> findByPlayer_IdAndStatus(UUID id, PlayerQuestStatus status);
 
+    Optional<PlayerQuest> findByPlayer_IdAndQuest_Id(UUID id, Integer id1);
 }

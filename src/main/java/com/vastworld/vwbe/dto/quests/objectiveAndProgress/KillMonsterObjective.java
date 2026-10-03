@@ -1,8 +1,12 @@
 package com.vastworld.vwbe.dto.quests.objectiveAndProgress;
 
+import com.vastworld.vwbe.enums.quests.QuestObjectiveTypes;
+
 public record KillMonsterObjective(
         String description,
-        int monsterId,
-        int requiredCount,
-        int currentCount
+        Integer monsterId,
+        Integer requiredCount,
+        Integer currentCount,
+        Boolean isCompleted,
+        QuestObjectiveTypes objectiveType
 ) implements ObjectiveAndProgressOfQuest {}

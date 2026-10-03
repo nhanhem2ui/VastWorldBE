@@ -5,4 +5,5 @@ public sealed interface ObjectiveAndProgressOfQuest permits
         CollectItemObjective,
         ReachMapObjective,
         ReachCoordinateObjective,
-        LevelUpObjective {}
+        LevelUpObjective
+{}

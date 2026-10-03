@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.security.AuthenticatedUser;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.SseNotificationService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import java.util.Objects;
 
 @RestController
 @PreAuthorize("isAuthenticated()")
+@RateLimit
 @RequestMapping("/api/notifications")
 public class NotificationController {
     private final SseNotificationService sseNotificationService;

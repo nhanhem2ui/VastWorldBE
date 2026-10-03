@@ -4,10 +4,12 @@ import com.vastworld.vwbe.dto.listeners.PLayerLeveledUpEvent;
 import com.vastworld.vwbe.dto.listeners.PlayerTravelEvent;
 import com.vastworld.vwbe.dto.listeners.QuestCompletedEvent;
 import com.vastworld.vwbe.dto.listeners.QuestCompletedNotification;
+import com.vastworld.vwbe.dto.playerinventory.AddToInventoryRequest;
 import com.vastworld.vwbe.entites.*;
 import com.vastworld.vwbe.enums.quests.PlayerQuestStatus;
 import com.vastworld.vwbe.repositories.*;
 import com.vastworld.vwbe.services.CultivationRealmService;
+import com.vastworld.vwbe.services.PlayerInventoryService;
 import com.vastworld.vwbe.services.RealmStageService;
 import com.vastworld.vwbe.services.SseNotificationService;
 import jakarta.validation.Valid;
@@ -38,6 +40,7 @@ public class QuestEventListener {
     private final PlayerRepository playerRepository;
     private final CultivationRealmService cultivationRealmService;
     private final RealmStageService realmStageService;
+    private final PlayerInventoryService playerInventoryService;
 
     public QuestEventListener(
             PlayerQuestRepository playerQuestRepository, QuestObjectiveRepository questObjectiveRepository,
@@ -45,7 +48,7 @@ public class QuestEventListener {
             QuestRepository questRepository, QuestRewardRepository questRewardRepository,
             SseNotificationService sseNotificationService,ApplicationEventPublisher eventPublisher,
             PlayerRepository playerRepository, CultivationRealmService cultivationRealmService,
-            RealmStageService realmStageService) {
+            RealmStageService realmStageService, PlayerInventoryService playerInventoryService) {
 
         this.playerQuestRepository = playerQuestRepository;
         this.questObjectiveRepository = questObjectiveRepository;
@@ -58,6 +61,7 @@ public class QuestEventListener {
         this.playerRepository = playerRepository;
         this.cultivationRealmService = cultivationRealmService;
         this.realmStageService = realmStageService;
+        this.playerInventoryService = playerInventoryService;
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -142,11 +146,7 @@ public class QuestEventListener {
         var quest = questRepository.findById(event.questId()).orElse(null);
 
         if (quest == null) {
-            log.warn(
-                    "Quest {} not found for completion event, player {}",
-                    event.questId(),
-                    event.playerId()
-            );
+            log.warn("Quest {} not found for completion event, player {}", event.questId(), event.playerId());
             return;
         }
 
@@ -158,11 +158,7 @@ public class QuestEventListener {
                 event.rewardsText()
         );
 
-        sseNotificationService.sendToPlayer(
-                event.playerId(),
-                "quest-completed",
-                payload
-        );
+        sseNotificationService.sendToPlayer(event.playerId(), "quest-completed", payload);
     }
 
     private void markObjectiveComplete(PlayerQuest playerQuest, QuestObjective objective) {
@@ -205,11 +201,7 @@ public class QuestEventListener {
     }
 
     private String formatRewards(Integer questId) {
-        var rewardsOptional = questRewardRepository.findByQuest_Id(questId);
-        if(rewardsOptional.isEmpty()) {
-            return "";
-        }
-        var rewards = rewardsOptional.get();
+        var rewards = questRewardRepository.findByQuest_Id(questId);
         return rewards.stream()
                 .map(reward -> switch (reward.getRewardType()) {
                     case SPIRIT_STONE -> "x" + reward.getAmount() + " Spirit Stone";
@@ -227,33 +219,55 @@ public class QuestEventListener {
                 .collect(Collectors.joining(System.lineSeparator()));
     }
 
-    //TODO: Finish 3 cases missing
     private void giveRewards(Integer questId, UUID playerId) {
-        var rewardsOptional = questRewardRepository.findByQuest_Id(questId);
-        if(rewardsOptional.isEmpty()) {
-            return;
-        }
-        var rewards = rewardsOptional.get();
-        var playerOptional = playerRepository.findById(playerId);
 
-        if(playerOptional.isEmpty()) {
-            log.warn("No player with id {} found at giveRewards", playerId);
-            return;
-        }
+        var player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalStateException("Player not found"));
 
-        var player = playerOptional.get();
+        var rewards = questRewardRepository.findByQuest_Id(questId);
 
-        for(var reward : rewards) {
+        for (var reward : rewards) {
+
             switch (reward.getRewardType()) {
+
                 case CULTIVATION_POINT ->
-                        player.setCultivationPoint(player.getCultivationPoint() + reward.getAmount());
+                        player.setCultivationPoint(
+                                player.getCultivationPoint() + reward.getAmount()
+                        );
+
                 case SPIRIT_STONE ->
-                        player.setSpiritStone(player.getSpiritStone() + reward.getAmount());
-//                case ITEM ->;
-//                case REPUTATION -> ;
-//                case SKILL -> ;
+                        player.setSpiritStone(
+                                player.getSpiritStone() + reward.getAmount()
+                        );
+
+                case REPUTATION ->
+                        player.setReputation(
+                                player.getReputation() + reward.getAmount()
+                        );
+
+                case ITEM -> {
+                    if (reward.getItem() == null) {
+                        throw new IllegalStateException("Item reward has no item configured for quest " + questId);
+                    }
+
+                    int quantity = Math.toIntExact(reward.getAmount());
+
+                    var result = playerInventoryService.addToInventory(
+                            new AddToInventoryRequest(reward.getItem().getId(), quantity), playerId
+                    );
+
+                    if (!result.isSuccess()) {
+                        throw new IllegalStateException(
+                                "Failed to add item reward to inventory: "
+                                        + result.getMessage()
+                        );
+                    }
+                }
+
+                case SKILL -> {
+                    // TODO: implement adding skill
+                }
             }
-            playerRepository.save(player);
         }
     }
 }

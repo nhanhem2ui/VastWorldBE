@@ -1,5 +1,7 @@
 package com.vastworld.vwbe.dto.quests.objectiveAndProgress;
 
+import com.vastworld.vwbe.enums.quests.QuestObjectiveTypes;
+
 public record ReachCoordinateObjective(
         String description,
         Integer mapId,
@@ -7,5 +9,7 @@ public record ReachCoordinateObjective(
         Integer targetX,
         Integer targetY,
         Integer currentX,
-        Integer currentY
+        Integer currentY,
+        Boolean isCompleted,
+        QuestObjectiveTypes objectiveType
 ) implements ObjectiveAndProgressOfQuest {}

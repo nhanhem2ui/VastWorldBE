@@ -11,10 +11,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -22,21 +23,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CorsProperties corsProperties;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CorsProperties corsProperties) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.corsProperties = corsProperties;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 //Generate CSRF tokens, store in cookie, verify on requests.
-                .csrf(csrf -> csrf.csrfTokenRepository(
-                    CookieCsrfTokenRepository.withHttpOnlyFalse())
-                ).csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrf(csrf -> csrf
+//                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/api/**")
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -64,32 +61,13 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                corsProperties.getAllowedOrigins()
-        );
-
-        configuration.setAllowedMethods(
-                corsProperties.getAllowedMethods()
-        );
-
-        configuration.setAllowedHeaders(
-                corsProperties.getAllowedHeaders()
-        );
-
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // your Vite dev origin, exact match
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+        config.setAllowedHeaders(List.of("Content-Type"));
+        config.setAllowCredentials(true); // required for cookies to be sent/read cross-origin
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }

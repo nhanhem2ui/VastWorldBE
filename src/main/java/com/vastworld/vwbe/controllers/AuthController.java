@@ -50,10 +50,10 @@ public class AuthController {
         if (result.isSuccess() && result.getData() != null) {
             ResponseCookie cookie = ResponseCookie.from("accessToken", result.getData().token())
                     .httpOnly(true)
-                    .secure(true) // https
+                    .secure(true)
                     .path("/")
                     .maxAge(Duration.ofMillis(jwtExpiration))
-                    .sameSite("Strict")
+                    .sameSite("None")
                     .build();
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         }
@@ -61,18 +61,17 @@ public class AuthController {
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
-    @PostMapping("/logout")
-    @RateLimit(limit = 5)
-    public ResponseEntity<ServiceResult<Void>> logout(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("accessToken", "")
+    @PostMapping("/api/auth/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie expired = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok(ServiceResult.success("Logged out successfully"));
+        response.addHeader(HttpHeaders.SET_COOKIE, expired.toString());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/confirm-email")
