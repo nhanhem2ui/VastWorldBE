@@ -4,6 +4,10 @@ import java.util.UUID;
 
 public record GetPlayerInventoryResponse(
     UUID itemId,
+    String itemName,
     String itemImageUrl,
-    Integer quantity
+    StatsOfItem stats,
+    String itemType,
+    Integer quantity,
+    Boolean combatOnly
 ){}

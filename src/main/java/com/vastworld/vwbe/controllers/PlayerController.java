@@ -4,14 +4,17 @@ import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
 import com.vastworld.vwbe.dto.player.NewPlayableDTO;
 import com.vastworld.vwbe.dto.player.PlayerDTO;
+import com.vastworld.vwbe.security.AuthenticatedUser;
 import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.vastworld.vwbe.common.Common.resolveStatus;
@@ -46,9 +49,10 @@ public class PlayerController {
         return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
     }
 
-    @GetMapping("/nextBreakthrough/{playerId}")
-    public ResponseEntity<ServiceResult<GetPlayerNextBreakthroughResponse>> getPlayerNextBreakthrough(@PathVariable UUID playerId){
-        var result = playerService.getPlayerNextBreakthrough(playerId);
+    @GetMapping("/nextBreakthrough")
+    public ResponseEntity<ServiceResult<GetPlayerNextBreakthroughResponse>> getPlayerNextBreakthrough(Authentication authentication) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerService.getPlayerNextBreakthrough(Objects.requireNonNull(user).playerId());
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 

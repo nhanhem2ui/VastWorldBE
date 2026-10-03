@@ -1,8 +1,11 @@
 package com.vastworld.vwbe.entites;
 
+import com.vastworld.vwbe.enums.EquipmentSlotTypes;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -11,18 +14,19 @@ import lombok.Setter;
 public class PlayerEquipment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "Id")
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PlayerId", nullable = false)
     private Player player;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "InventoryId", nullable = false)
-    private PlayerInventory inventory;
+    @JoinColumn(name = "ItemId")
+    private Item item;
 
-    @Column(name = "EquipmentSlot", nullable = false, length = 50)
-    private String equipmentSlot;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EquipmentSlotTypes", nullable = false, length = 50)
+    private EquipmentSlotTypes equipmentSlotType;
 }

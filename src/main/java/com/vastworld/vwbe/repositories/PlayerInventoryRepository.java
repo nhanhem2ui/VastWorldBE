@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PlayerInventoryRepository extends JpaRepository<PlayerInventory, Long> {
+public interface PlayerInventoryRepository extends JpaRepository<PlayerInventory, UUID> {
 
-    @EntityGraph(attributePaths = {"item"})
+    @EntityGraph(attributePaths = {"item.itemType"})
     List<PlayerInventory> findByPlayer_Id(UUID id);
+
+    @EntityGraph(attributePaths = {"item.itemType"})
+    Optional<PlayerInventory> findByPlayer_IdAndItem_Id(UUID id, UUID id1);
 }

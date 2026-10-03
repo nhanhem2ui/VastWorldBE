@@ -15,14 +15,14 @@ import java.util.UUID;
 public class CombatSession {
 
     @Id
-    @Column(name = "Id", updatable = false, nullable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "Id")
     private UUID id = UUID.randomUUID();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ArenaId", nullable = false)
     private HexArena arena;
 
-    // Assuming a Player entity exists
     @Column(name = "InitiatorId", nullable = false)
     private UUID initiatorId;
 
