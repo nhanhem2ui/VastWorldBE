@@ -8,5 +8,6 @@ public record StatsOfItem(
         Double critDamage,
         Double speed,
         Double lifeSteal,
-        Double cultivationSpeed
+        Double cultivationSpeed,
+        Float breakthroughChance
 ) {}

@@ -1,5 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
+import com.vastworld.vwbe.entites.PlayerQuest;
 import com.vastworld.vwbe.entites.PlayerQuestObjectiveProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,6 @@ public interface PlayerQuestObjectiveProgressRepository extends JpaRepository<Pl
     Optional<PlayerQuestObjectiveProgress> findByPlayerQuest_IdAndQuestObjective_Id(Long playerQuestId, Integer questObjectiveId);
 
     List<PlayerQuestObjectiveProgress> findByPlayerQuest_Id(Long playerQuestId);
+
+    Void deleteByPlayerQuest(PlayerQuest playerQuest);
 }

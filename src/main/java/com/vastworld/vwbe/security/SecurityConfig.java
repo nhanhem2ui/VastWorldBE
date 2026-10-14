@@ -62,7 +62,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // your Vite dev origin, exact match
+        config.setAllowedOrigins(List.of("https://localhost:5173")); // your Vite dev origin, exact match
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type"));
         config.setAllowCredentials(true); // required for cookies to be sent/read cross-origin

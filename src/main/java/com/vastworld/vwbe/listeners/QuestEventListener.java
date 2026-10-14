@@ -265,7 +265,7 @@ public class QuestEventListener {
                 }
 
                 case SKILL -> {
-                    // TODO: implement adding skill
+                    // TODO: LOW implement adding skill
                 }
             }
         }

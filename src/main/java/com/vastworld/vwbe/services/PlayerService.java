@@ -161,7 +161,7 @@ public class PlayerService {
                 default -> GameBalance.THREE_SPIRIT_ROOT;
             };
 
-            //TODO: Add bonus chances
+            //TODO: MEDIUM Add bonus chances
 
             var chanceOfSuccess = GameBalance.getBreakthroughChance(player.getRealmId(), player.getRealmStage(), rootBonus, 1D);
 
@@ -210,7 +210,7 @@ public class PlayerService {
             var nextRealmAndStage = getNextRealmAndStageId(player.getRealmId(), player.getRealmStage());
 
             if (Boolean.TRUE.equals(nextBreakthrough.isTribulation())) {
-                // TODO: Trigger Tribulation combat/event logic here
+                // TODO: LOW Trigger Tribulation combat/event logic here
                 playerRepository.save(player);
                 redisService.delete(cacheKey);
                 return ServiceResult.success("Tribulation triggered! Prepare for lightning strikes.");
@@ -278,51 +278,6 @@ public class PlayerService {
         } catch (Exception ex) {
             return ServiceResult.failure("Error creating playable character", ex);
         }
-    }
-
-    public ServiceResult<PlayerDTO> updatePlayer(UUID id, PlayerDTO dto) {
-        try {
-            if (id == null) {
-                return ServiceResult.failure("Player id is invalid");
-            }
-
-            var playerOptional = playerRepository.findById(id);
-            if (playerOptional.isEmpty()) {
-                return ServiceResult.failure("Player not found");
-            }
-
-            var referencesResult = resolveReferences(dto);
-            if (!referencesResult.isSuccess()) {
-                return ServiceResult.failure(referencesResult.getMessage());
-            }
-
-            var player = playerOptional.get();
-            player.setAccount(referencesResult.getData().account());
-            applyDto(player, dto);
-
-            var updatedPlayer = playerRepository.save(player);
-            return ServiceResult.success("Player updated successfully", toDto(updatedPlayer));
-        } catch (Exception ex) {
-            return ServiceResult.failure("Error updating player", ex);
-        }
-    }
-
-    private void applyDto(Player player, PlayerDTO dto) {
-        player.setRealmId(dto.realmId());
-        player.setGender(dto.gender());
-        player.setRollNum(defaultInteger(dto.rollNum(), 5));
-        player.setRealmStage(dto.realmStage());
-        player.setHp(defaultLong(dto.hp(), 100L));
-        player.setAttack(defaultLong(dto.attack(), 10L));
-        player.setDefense(defaultLong(dto.defense(), 5L));
-        player.setCritRate(defaultDouble(dto.critRate(), 0D));
-        player.setCritDamage(defaultDouble(dto.critDamage(), 150D));
-        player.setSpeed(defaultDouble(dto.speed(), 1D));
-        player.setLifeSteal(defaultDouble(dto.lifeSteal(), 0D));
-        player.setCultivationSpeed(defaultDouble(dto.cultivationSpeed(), 1D));
-        player.setCultivationPoint(defaultLong(dto.cultivationPoint(), 0L));
-        player.setReputation(defaultLong(dto.reputation(), 0L));
-        player.setSpiritStone(defaultLong(dto.spiritStone(), 0L));
     }
 
     private PlayerDTO toDto(Player player) {
