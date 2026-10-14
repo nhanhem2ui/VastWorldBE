@@ -133,7 +133,6 @@ public class QuestService {
                                     .plusMinutes(q.getCooldownMinutes())
                                     .isBefore(now);
                         }
-
                         return true;
                     })
                     .map(quest -> {
@@ -301,7 +300,7 @@ public class QuestService {
         try {
             var questList = getAvailableQuests(playerId).getData();
 
-            if (questList.isEmpty()) {
+            if (questList == null || questList.isEmpty()) {
                 return ServiceResult.failure("Not available quest", HttpStatus.NOT_FOUND);
             }
 
@@ -311,19 +310,51 @@ public class QuestService {
                 return ServiceResult.failure("Not available quest", HttpStatus.NOT_FOUND);
             }
 
-            var quest = questRepository.findById(questId);
-            if (quest.isEmpty()) {
+            var questOptional = questRepository.findById(questId);
+            if (questOptional.isEmpty()) {
                 return ServiceResult.failure("Quest not found", HttpStatus.NOT_FOUND);
             }
+            var quest = questOptional.get();
 
             var player = playerService.getPlayerEntityById(playerId).getData();
             if (player == null) {
                 return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
             }
 
-            var playerQuest = new PlayerQuest();
-            playerQuest.setPlayer(player);
-            playerQuest.setQuest(quest.get());
+            var existingPlayerQuestOptional = playerQuestRepository.findByPlayer_IdAndQuest_Id(playerId, questId);
+            PlayerQuest playerQuest;
+
+            if (existingPlayerQuestOptional.isPresent()) {
+                playerQuest = existingPlayerQuestOptional.get();
+
+                if (!quest.getIsRepeatable()) {
+                    return ServiceResult.failure("Quest has already been completed", HttpStatus.BAD_REQUEST);
+                }
+
+                if (quest.getMaxCompletions() != null && playerQuest.getCompletionCount() >= quest.getMaxCompletions()) {
+                    return ServiceResult.failure("Quest has reached the maximum number of completions", HttpStatus.BAD_REQUEST);
+                }
+
+                if (playerQuest.getStatus() == PlayerQuestStatus.IN_PROGRESS) {
+                    return ServiceResult.failure("Quest is already in progress", HttpStatus.BAD_REQUEST);
+                }
+
+                if (quest.getCooldownMinutes() != null &&
+                        playerQuest.getClaimedAt() != null &&
+                        playerQuest.getClaimedAt()
+                                .plusMinutes(quest.getCooldownMinutes())
+                                .isAfter(LocalDateTime.now())) {
+                    return ServiceResult.failure("Quest is still on cooldown", HttpStatus.BAD_REQUEST);
+                }
+
+                playerQuestObjectiveProgressRepository.deleteByPlayerQuest(playerQuest);
+            } else {
+                // First time accepting the quest
+                playerQuest = new PlayerQuest();
+                playerQuest.setPlayer(player);
+                playerQuest.setQuest(quest);
+            }
+
             playerQuest.setStatus(PlayerQuestStatus.IN_PROGRESS);
             playerQuestRepository.save(playerQuest);
 
@@ -333,12 +364,14 @@ public class QuestService {
                 return ServiceResult.failure("Something went wrong..", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
+            final PlayerQuest targetPlayerQuest = playerQuest;
             var progresses = questObjectives.stream()
                     .map(qOj -> {
                         var progress = new PlayerQuestObjectiveProgress();
-                        progress.setPlayerQuest(playerQuest);
+                        progress.setPlayerQuest(targetPlayerQuest);
                         progress.setQuestObjective(qOj);
                         progress.setIsCompleted(false);
+                        progress.setCurrentCount(0);
                         return progress;
                     })
                     .toList();

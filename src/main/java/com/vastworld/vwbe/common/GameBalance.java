@@ -1,5 +1,7 @@
 package com.vastworld.vwbe.common;
 
+import com.vastworld.vwbe.enums.RealmEnum;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -35,25 +37,25 @@ public final class GameBalance {
      * LIFESPAN
      * realmId starts at 1
      */
+
     private static final int[] REALM_LIFESPAN = {
-            100,        // 1 Mortal
-            150,        // 2 Luyện Khí
-            250,        // 3 Trúc Cơ
-            500,        // 4 Kim Đan
-            1000,       // 5 Nguyên Anh
-            2000,       // 6 Hóa Thần
-            4000,       // 7 Luyện Hư
-            8000,       // 8 Hợp Thể
-            15000,      // 9 Đại Thừa
-            30000,      // 10 Độ Kiếp
-            60000,      // 11 Nhân Tiên
-            120000,     // 12 Địa Tiên
-            250000,     // 13 Thiên Tiên
-            500000,     // 14 Kim Tiên
-            1000000,    // 15 Thái Ất
-            5000000,    // 16 Đại La
-            50000000,   // 17 Đạo Tổ
-            Integer.MAX_VALUE // 18 Thiên Đạo
+            120,        // 1 Luyện Khí
+            250,        // 2 Trúc Cơ
+            500,        // 3 Kim Đan
+            1000,       // 4 Nguyên Anh
+            2000,       // 5 Hóa Thần
+            4000,       // 6 Luyện Hư
+            8000,       // 7 Hợp Thể
+            15000,      // 8 Đại Thừa
+            30000,      // 9 Độ Kiếp
+            60000,      // 10 Nhân Tiên
+            120000,     // 11 Địa Tiên
+            250000,     // 12 Thiên Tiên
+            500000,     // 13 Kim Tiên
+            1000000,    // 14 Thái Ất
+            5000000,    // 15 Đại La
+            50000000,   // 16 Đạo Tổ
+            1000000000 // 17 Thiên Đạo
     };
 
     public static final double BASE_BREAKTHROUGH_CHANCE = 0.5D;
@@ -62,10 +64,10 @@ public final class GameBalance {
     public static final double MAX_BREAKTHROUGH_CHANCE = 1D;
 
     private static final double[] REALM_BREAKTHROUGH_CHANCE_MODIFIER = {
-            0.7D, // Luyen Khi
-            0.6D, // Truc Co
-            0.55D, // Kim Dan
-            0.52D, // Nguyen Anh
+            0.8D, // Luyen Khi
+            0.7D, // Truc Co
+            0.6D, // Kim Dan
+            0.56D, // Nguyen Anh
             0.5D, // Hoa Than
             0.45D,
             0.42D,
@@ -98,6 +100,7 @@ public final class GameBalance {
     /**
      * Returns game years passed since a given time.
      */
+
     public static long getGameYearsPassed(LocalDateTime beginTime) {
         long realHours = Duration
                 .between(beginTime, LocalDateTime.now())
@@ -126,7 +129,15 @@ public final class GameBalance {
                     "Invalid realm id: " + realmId
             );
         }
-        return REALM_LIFESPAN[realmId - 1];
+        return REALM_LIFESPAN[realmId];
+    }
+
+    public static int getPlayerLifeSpan(RealmEnum realm) {
+        if (realm == null) {
+            throw new IllegalArgumentException("Realm cannot be null");
+        }
+
+        return getPlayerLifeSpan(realm.getValue());
     }
 
     /**

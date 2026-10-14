@@ -58,6 +58,9 @@ public class Item {
     @Column(name = "CultivationSpeed", nullable = false)
     private Double cultivationSpeed = 0D;
 
+    @Column(name = "BreakthroughBonus", nullable = false)
+    private Float breakthroughBonus = 0F;
+
     @Column(name = "CombatOnly", nullable = false)
     private boolean combatOnly = false;
 }

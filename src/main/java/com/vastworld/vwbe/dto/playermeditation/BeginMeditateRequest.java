@@ -6,8 +6,6 @@ import java.util.UUID;
 
 public record BeginMeditateRequest(
         @NotNull
-        UUID playerId,
-        @NotNull
         @Min(1)
         @Max(1440) //24hr
         Integer durationMinutes

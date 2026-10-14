@@ -5,15 +5,22 @@ import com.vastworld.vwbe.dto.playermeditation.BeginMeditateRequest;
 import com.vastworld.vwbe.dto.playermeditation.GetCultivationPointPerMinsResponse;
 import com.vastworld.vwbe.dto.playermeditation.GetPlayerMeditationByIdResponse;
 import com.vastworld.vwbe.dto.playermeditation.PlayerMeditationDTO;
+import com.vastworld.vwbe.security.AuthenticatedUser;
 import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerMeditationService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.vastworld.vwbe.common.Common.resolveStatus;
@@ -21,6 +28,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/player-meditations")
 @PreAuthorize("isAuthenticated()")
+@Validated
 @RateLimit(limit = 30)
 public class PlayerMeditationController {
     private final PlayerMeditationService playerMeditationService;
@@ -30,53 +38,30 @@ public class PlayerMeditationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ServiceResult<List<PlayerMeditationDTO>>> getAllPlayerMeditations() {
-        var result = playerMeditationService.getAllPlayerMeditations();
+    public ResponseEntity<ServiceResult<GetPlayerMeditationByIdResponse>> getPlayerMeditationByPlayerId(Authentication authentication) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerMeditationService.getPlayerMeditationByPlayerId(Objects.requireNonNull(user).playerId());
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
-    @GetMapping("/{playerId}")
-    public ResponseEntity<ServiceResult<GetPlayerMeditationByIdResponse>> getPlayerMeditationByPlayerId(@PathVariable UUID playerId) {
-        var result = playerMeditationService.getPlayerMeditationByPlayerId(playerId);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
+    //TODO: Unused endpoint
     @GetMapping("/cpPerMins/{playerId}")
-    public ResponseEntity<ServiceResult<GetCultivationPointPerMinsResponse>> getCultivationPointPerMins(@PathVariable UUID playerId){
+    public ResponseEntity<ServiceResult<GetCultivationPointPerMinsResponse>> getCultivationPointPerMins(@PathVariable UUID playerId) {
         var result = playerMeditationService.getCultivationPointPerMins(playerId);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
-    @PostMapping("/beginMeditate")
-    public ResponseEntity<ServiceResult<Void>> beginMeditate(@Valid @RequestBody BeginMeditateRequest request){
-        var result = playerMeditationService.beginMeditate(request);
+    @PostMapping("/beginMeditate/{durationMinutes}")
+    public ResponseEntity<ServiceResult<Void>> beginMeditate(Authentication authentication, @PathVariable @NotNull @Min(1) @Max(1440) Integer durationMinutes) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerMeditationService.beginMeditate(Objects.requireNonNull(user).playerId(), durationMinutes);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
     }
 
-    @PostMapping("/claimMeditate/{playerId}")
-    public ResponseEntity<ServiceResult<Void>> claimMeditate(@PathVariable UUID playerId){
-        var result = playerMeditationService.claimMeditate(playerId);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    @PostMapping
-    public ResponseEntity<ServiceResult<PlayerMeditationDTO>> createPlayerMeditation(@RequestBody PlayerMeditationDTO dto) {
-        var result = playerMeditationService.createPlayerMeditation(dto);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ServiceResult<PlayerMeditationDTO>> updatePlayerMeditation(
-            @PathVariable Long id,
-            @RequestBody PlayerMeditationDTO dto) {
-        var result = playerMeditationService.updatePlayerMeditation(id, dto);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceResult<Void>> deletePlayerMeditation(@PathVariable Long id) {
-        var result = playerMeditationService.deletePlayerMeditation(id);
+    @PostMapping("/claimMeditate")
+    public ResponseEntity<ServiceResult<Void>> claimMeditate(Authentication authentication) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerMeditationService.claimMeditate(Objects.requireNonNull(user).playerId());
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 }

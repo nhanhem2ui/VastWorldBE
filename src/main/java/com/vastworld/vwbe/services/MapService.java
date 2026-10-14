@@ -156,9 +156,9 @@ public class MapService {
         }
     }
 
-    public ServiceResult<Void> travel(TravelRequest request) {
+    public ServiceResult<Void> travel(UUID playerId, TravelRequest request) {
         try {
-            var playerLocationOptional = playerLocationRepository.findByPlayer_Id(request.playerId());
+            var playerLocationOptional = playerLocationRepository.findByPlayer_Id(playerId);
             if (playerLocationOptional.isEmpty()) {
                 return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
             }
@@ -182,7 +182,7 @@ public class MapService {
             playerLocation.setY(request.y());
             playerLocationRepository.save(playerLocation);
 
-            eventPublisher.publishEvent(new PlayerTravelEvent(request.playerId(), request.mapId(), request.x(), request.y()));
+            eventPublisher.publishEvent(new PlayerTravelEvent(playerId, request.mapId(), request.x(), request.y()));
 
             return ServiceResult.success("Travelled to destination", HttpStatus.NO_CONTENT);
         } catch (Exception ex) {

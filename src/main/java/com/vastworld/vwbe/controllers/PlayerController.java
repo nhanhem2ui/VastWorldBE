@@ -56,17 +56,10 @@ public class PlayerController {
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 
-    @PostMapping("/breakthrough/{playerId}")
-    public ResponseEntity<ServiceResult<Void>> startBreakthrough(@PathVariable UUID playerId){
-        var result = playerService.startBreakthrough(playerId);
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ServiceResult<PlayerDTO>> updatePlayer(
-            @PathVariable UUID id,
-            @RequestBody PlayerDTO dto) {
-        var result = playerService.updatePlayer(id, dto);
+    @PostMapping("/breakthrough")
+    public ResponseEntity<ServiceResult<Void>> startBreakthrough(Authentication authentication){
+        var user =  (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerService.startBreakthrough(Objects.requireNonNull(user).playerId());
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 }

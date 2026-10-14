@@ -76,7 +76,8 @@ public class PlayerInventoryService {
                             item.getCritDamage(),
                             item.getSpeed(),
                             item.getLifeSteal(),
-                            item.getCultivationSpeed()
+                            item.getCultivationSpeed(),
+                            item.getBreakthroughBonus()
                     );
                 }
 
@@ -147,7 +148,8 @@ public class PlayerInventoryService {
                             item.getCritDamage(),
                             item.getSpeed(),
                             item.getLifeSteal(),
-                            item.getCultivationSpeed()
+                            item.getCultivationSpeed(),
+                            item.getBreakthroughBonus()
                     );
                 }
 
@@ -175,6 +177,7 @@ public class PlayerInventoryService {
         }
     }
 
+    //TODO: LOW Check for quantity on frontend (use multiple)
     public ServiceResult<Void> useItem(UUID playerId, AddToInventoryRequest request) {
         try {
             if (request.itemId() == null || playerId == null) {
@@ -217,9 +220,7 @@ public class PlayerInventoryService {
 
             var player = playerOptional.get();
 
-            String itemType = item.getItemType().getName();
-
-            switch (itemType) {
+            switch (item.getItemType().getName()) {
                 case "Vũ Khí" -> equipItem(player, inventorySlot, EquipmentSlotTypes.WEAPON);
                 case "Mũ" -> equipItem(player, inventorySlot, EquipmentSlotTypes.HELMET);
                 case "Áo" -> equipItem(player, inventorySlot, EquipmentSlotTypes.CHESTPLATE);
@@ -228,12 +229,29 @@ public class PlayerInventoryService {
                 case "Trang sức" -> equipItem(player, inventorySlot,EquipmentSlotTypes.ACCESSORY);
 
                 case "Đan dược" -> {
-                    // TODO: Apply the item's consumable effect here.
-                    inventorySlot.setQuantity(currentQuantity - request.quantity());
+                    var quantity = request.quantity();
 
-                    if (inventorySlot.getQuantity() <= 0) {
+                    player.setHp(player.getHp() + item.getHp() * quantity);
+                    player.setAttack(player.getAttack() + item.getAttack() * quantity);
+                    player.setDefense(player.getDefense() + item.getDefense() * quantity);
+
+                    player.setCritRate(player.getCritRate() + item.getCritRate() * quantity);
+                    player.setCritDamage(player.getCritDamage() + item.getCritDamage() * quantity);
+                    player.setSpeed(player.getSpeed() + item.getSpeed() * quantity);
+                    player.setLifeSteal(player.getLifeSteal() + item.getLifeSteal() * quantity);
+                    player.setCultivationSpeed(
+                            player.getCultivationSpeed() + item.getCultivationSpeed() * quantity
+                    );
+
+                    playerRepository.save(player);
+
+                    int remainingQuantity = currentQuantity - request.quantity();
+
+                    if (remainingQuantity <= 0) {
                         inventorySlot.setQuantity(0);
                         inventorySlot.setItem(null);
+                    } else {
+                        inventorySlot.setQuantity(remainingQuantity);
                     }
 
                     playerInventoryRepository.save(inventorySlot);
