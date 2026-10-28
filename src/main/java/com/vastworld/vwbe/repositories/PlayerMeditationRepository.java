@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.PlayerMeditation;
+import com.vastworld.vwbe.entities.PlayerMeditation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

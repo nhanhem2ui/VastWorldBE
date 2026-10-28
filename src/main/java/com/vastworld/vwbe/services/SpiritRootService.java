@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.spiritroot.SpiritRootDTO;
-import com.vastworld.vwbe.entites.SpiritRoot;
+import com.vastworld.vwbe.entities.SpiritRoot;
 import com.vastworld.vwbe.repositories.SpiritRootRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

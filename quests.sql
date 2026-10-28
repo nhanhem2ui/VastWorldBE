@@ -22,6 +22,20 @@ INSERT INTO [dbo].[Quests]
 		   (5, N'Kết đan 1', N'Đan điền của bạn sinh ra môt viên kim đan, kim đan có đan hỏa có thể sử dụng để luyện chế Bổn Mệnh Pháp Bảo.', 2, 4, 0, NULL, NULL),
 		   (6, N'Kết đan 2', N'Tiếp tục mạnh lên, chuẩn bị cho tấn cấp Nguyên Anh.', 2, 5, 0, NULL, NULL)
 GO
+
+INSERT INTO [dbo].[Quests]
+           ([Id]
+		   ,[Name]
+           ,[Description]
+           ,[RequiredRealmId]
+           ,[PrerequisiteQuestId]
+           ,[IsRepeatable]
+           ,[CooldownMinutes]
+           ,[MaxCompletions])
+     VALUES
+			(7, N'Nghịch Thiên Chi Lộ 1', N''
+
+GO
 SET IDENTITY_INSERT [Quests] OFF;
 GO
 

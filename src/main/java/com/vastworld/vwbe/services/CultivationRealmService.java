@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.cultivationrealm.CultivationRealmDTO;
-import com.vastworld.vwbe.entites.CultivationRealm;
+import com.vastworld.vwbe.entities.CultivationRealm;
 import com.vastworld.vwbe.repositories.CultivationRealmRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

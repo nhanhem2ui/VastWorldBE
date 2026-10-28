@@ -1,14 +1,10 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
-import com.vastworld.vwbe.dto.playermeditation.BeginMeditateRequest;
-import com.vastworld.vwbe.dto.playermeditation.GetCultivationPointPerMinsResponse;
 import com.vastworld.vwbe.dto.playermeditation.GetPlayerMeditationByIdResponse;
-import com.vastworld.vwbe.dto.playermeditation.PlayerMeditationDTO;
 import com.vastworld.vwbe.security.AuthenticatedUser;
 import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerMeditationService;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -19,9 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static com.vastworld.vwbe.common.Common.resolveStatus;
 
@@ -41,13 +35,6 @@ public class PlayerMeditationController {
     public ResponseEntity<ServiceResult<GetPlayerMeditationByIdResponse>> getPlayerMeditationByPlayerId(Authentication authentication) {
         var user = (AuthenticatedUser) authentication.getPrincipal();
         var result = playerMeditationService.getPlayerMeditationByPlayerId(Objects.requireNonNull(user).playerId());
-        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
-    }
-
-    //TODO: Unused endpoint
-    @GetMapping("/cpPerMins/{playerId}")
-    public ResponseEntity<ServiceResult<GetCultivationPointPerMinsResponse>> getCultivationPointPerMins(@PathVariable UUID playerId) {
-        var result = playerMeditationService.getCultivationPointPerMins(playerId);
         return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
     }
 

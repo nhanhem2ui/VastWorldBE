@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.PlayerInventory;
+import com.vastworld.vwbe.entities.PlayerInventory;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -5,7 +5,7 @@ import com.vastworld.vwbe.dto.account.MeResponse;
 import com.vastworld.vwbe.dto.auth.AuthResponse;
 import com.vastworld.vwbe.dto.auth.LoginRequest;
 import com.vastworld.vwbe.dto.auth.RegisterRequest;
-import com.vastworld.vwbe.entites.Account;
+import com.vastworld.vwbe.entities.Account;
 import com.vastworld.vwbe.enums.RoleConstants;
 import com.vastworld.vwbe.repositories.AccountRepository;
 import com.vastworld.vwbe.repositories.PlayerRepository;

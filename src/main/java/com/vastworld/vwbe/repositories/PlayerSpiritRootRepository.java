@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.PlayerSpiritRoot;
+import com.vastworld.vwbe.entities.PlayerSpiritRoot;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

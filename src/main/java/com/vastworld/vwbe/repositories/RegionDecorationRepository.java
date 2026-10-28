@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.RegionDecoration;
+import com.vastworld.vwbe.entities.RegionDecoration;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;

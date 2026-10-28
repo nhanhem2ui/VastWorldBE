@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.Account;
+import com.vastworld.vwbe.entities.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
