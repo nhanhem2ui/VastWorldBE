@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public interface PlayerSpiritRootRepository extends JpaRepository<PlayerSpiritRoot, Integer> {
     List<PlayerSpiritRoot> findByPlayer_Id(UUID playerId);
+
     void deleteByPlayer_Id(UUID playerId);
+
     boolean existsByPlayer_IdAndSpiritRoot_Id(UUID playerId, Integer spiritRootId);
-    boolean existsByPlayer_IdAndSpiritRoot_IdAndIdNot(UUID playerId, Integer spiritRootId, Integer id);
 }

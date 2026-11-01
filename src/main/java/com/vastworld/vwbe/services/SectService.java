@@ -3,7 +3,6 @@ package com.vastworld.vwbe.services;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.sect.GetAllSectResponse;
 import com.vastworld.vwbe.entities.Sect;
-import com.vastworld.vwbe.repositories.MapRepository;
 import com.vastworld.vwbe.repositories.PlayerLocationRepository;
 import com.vastworld.vwbe.repositories.SectRepository;
 import org.springframework.http.HttpStatus;

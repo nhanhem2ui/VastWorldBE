@@ -1,6 +1,7 @@
 package com.vastworld.vwbe.controllers;
 
 import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.region.GetAccessibleRegion;
 import com.vastworld.vwbe.dto.region.GetPlayerRegionResponse;
 import com.vastworld.vwbe.dto.region.GetRegionResponse;
 import com.vastworld.vwbe.security.AuthenticatedUser;
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static com.vastworld.vwbe.common.Common.resolveStatus;
 
@@ -39,6 +40,13 @@ public class RegionController {
     public ResponseEntity<ServiceResult<GetPlayerRegionResponse>> getPlayerRegion(Authentication authentication){
         var user = (AuthenticatedUser) authentication.getPrincipal();
         var result = regionService.getPlayerRegion(Objects.requireNonNull(user).playerId());
+        return ResponseEntity.status(resolveStatus(result, null)).body(result);
+    }
+
+    @GetMapping("/accessible")
+    public ResponseEntity<ServiceResult<List<GetAccessibleRegion>>> getAccessibleRegion(Authentication authentication) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = regionService.getAccessibleRegion(Objects.requireNonNull(user).playerId());
         return ResponseEntity.status(resolveStatus(result, null)).body(result);
     }
 }

@@ -15,4 +15,6 @@ public interface PlayerInventoryRepository extends JpaRepository<PlayerInventory
 
     @EntityGraph(attributePaths = {"item.itemType"})
     Optional<PlayerInventory> findByPlayer_IdAndItem_Id(UUID id, UUID id1);
+
+    boolean existsByPlayer_IdAndItem_IdAndQuantityGreaterThan(UUID playerId, UUID itemId, Integer quantity);
 }

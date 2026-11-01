@@ -18,4 +18,7 @@ public interface PlayerQuestRepository extends JpaRepository<PlayerQuest, Intege
     List<PlayerQuest> findByPlayer_IdAndStatus(UUID id, PlayerQuestStatus status);
 
     Optional<PlayerQuest> findByPlayer_IdAndQuest_Id(UUID id, Integer id1);
+
+    boolean existsByPlayer_IdAndQuest_IdAndStatus(UUID playerId,Integer questId, PlayerQuestStatus status
+    );
 }
