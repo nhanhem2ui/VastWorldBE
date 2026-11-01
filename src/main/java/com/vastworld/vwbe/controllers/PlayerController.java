@@ -1,0 +1,65 @@
+package com.vastworld.vwbe.controllers;
+
+import com.vastworld.vwbe.dto.ServiceResult;
+import com.vastworld.vwbe.dto.player.GetPlayerNextBreakthroughResponse;
+import com.vastworld.vwbe.dto.player.NewPlayableDTO;
+import com.vastworld.vwbe.dto.player.PlayerDTO;
+import com.vastworld.vwbe.security.AuthenticatedUser;
+import com.vastworld.vwbe.security.ratelimit.RateLimit;
+import com.vastworld.vwbe.services.PlayerService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+import static com.vastworld.vwbe.common.Common.resolveStatus;
+
+@RestController
+@RequestMapping("/api/players")
+@PreAuthorize("isAuthenticated()")
+@RateLimit(limit = 30)
+public class PlayerController {
+    private final PlayerService playerService;
+
+    public PlayerController(PlayerService playerService) {
+        this.playerService = playerService;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ServiceResult<List<PlayerDTO>>> getAllPlayers() {
+        var result = playerService.getAllPlayers();
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ServiceResult<PlayerDTO>> getPlayerById(@PathVariable UUID id) {
+        var result = playerService.getPlayerById(id);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @PostMapping("/playable")
+    public ResponseEntity<ServiceResult<PlayerDTO>> createNewPlayable(@RequestBody NewPlayableDTO dto) {
+        var result = playerService.createNewPlayable(dto);
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.CREATED)).body(result);
+    }
+
+    @GetMapping("/nextBreakthrough")
+    public ResponseEntity<ServiceResult<GetPlayerNextBreakthroughResponse>> getPlayerNextBreakthrough(Authentication authentication) {
+        var user = (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerService.getPlayerNextBreakthrough(Objects.requireNonNull(user).playerId());
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+
+    @PostMapping("/breakthrough")
+    public ResponseEntity<ServiceResult<Void>> startBreakthrough(Authentication authentication){
+        var user =  (AuthenticatedUser) authentication.getPrincipal();
+        var result = playerService.startBreakthrough(Objects.requireNonNull(user).playerId());
+        return ResponseEntity.status(resolveStatus(result, HttpStatus.OK)).body(result);
+    }
+}

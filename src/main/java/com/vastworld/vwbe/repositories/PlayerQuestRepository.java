@@ -1,0 +1,24 @@
+package com.vastworld.vwbe.repositories;
+
+import com.vastworld.vwbe.entities.PlayerQuest;
+import com.vastworld.vwbe.enums.quests.PlayerQuestStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface PlayerQuestRepository extends JpaRepository<PlayerQuest, Integer> {
+
+    @EntityGraph(attributePaths = {"quest"})
+    List<PlayerQuest> findByPlayer_Id(UUID id);
+
+    @EntityGraph(attributePaths = {"quest"})
+    List<PlayerQuest> findByPlayer_IdAndStatus(UUID id, PlayerQuestStatus status);
+
+    Optional<PlayerQuest> findByPlayer_IdAndQuest_Id(UUID id, Integer id1);
+
+    boolean existsByPlayer_IdAndQuest_IdAndStatus(UUID playerId,Integer questId, PlayerQuestStatus status
+    );
+}

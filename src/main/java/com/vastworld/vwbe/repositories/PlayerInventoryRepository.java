@@ -1,0 +1,20 @@
+package com.vastworld.vwbe.repositories;
+
+import com.vastworld.vwbe.entities.PlayerInventory;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface PlayerInventoryRepository extends JpaRepository<PlayerInventory, UUID> {
+
+    @EntityGraph(attributePaths = {"item.itemType"})
+    List<PlayerInventory> findByPlayer_Id(UUID id);
+
+    @EntityGraph(attributePaths = {"item.itemType"})
+    Optional<PlayerInventory> findByPlayer_IdAndItem_Id(UUID id, UUID id1);
+
+    boolean existsByPlayer_IdAndItem_IdAndQuantityGreaterThan(UUID playerId, UUID itemId, Integer quantity);
+}
