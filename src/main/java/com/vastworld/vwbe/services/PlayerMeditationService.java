@@ -4,12 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.common.GameBalance;
 import com.vastworld.vwbe.dto.ServiceResult;
-import com.vastworld.vwbe.dto.playermeditation.BeginMeditateRequest;
-import com.vastworld.vwbe.dto.playermeditation.GetCultivationPointPerMinsResponse;
 import com.vastworld.vwbe.dto.playermeditation.GetPlayerMeditationByIdResponse;
-import com.vastworld.vwbe.dto.playermeditation.PlayerMeditationDTO;
-import com.vastworld.vwbe.entites.Player;
-import com.vastworld.vwbe.entites.PlayerMeditation;
+import com.vastworld.vwbe.entities.PlayerMeditation;
 import com.vastworld.vwbe.repositories.PlayerMeditationRepository;
 import com.vastworld.vwbe.repositories.PlayerRepository;
 import org.springframework.http.HttpStatus;
@@ -17,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -51,13 +46,13 @@ public class PlayerMeditationService {
             var cached = redisService.get(cacheKey, new TypeReference<GetPlayerMeditationByIdResponse>(){});
 
             if(cached != null){
-                return ServiceResult.success("Player meditation retrieved successfully", cached);
+                return ServiceResult.success("Player meditation retrieved successfully", cached, HttpStatus.OK);
             }
 
             var playerMeditationOptional = playerMeditationRepository.findByPlayer_IdAndIsClaimed(playerId, false);
 
             if (playerMeditationOptional.isEmpty()) {
-                return ServiceResult.failure("Player meditation not found");
+                return ServiceResult.failure("Player meditation not found", HttpStatus.NOT_FOUND);
             }
 
             var playerMeditation = playerMeditationOptional.get();
@@ -66,19 +61,10 @@ public class PlayerMeditationService {
                     playerMeditation.getCultivationPerMinute(), playerMeditation.getTotalCultivationReward(),
                     playerMeditation.getIsClaimed());
 
-            return ServiceResult.success("Player meditation retrieved successfully", data);
+            return ServiceResult.success("Player meditation retrieved successfully", data, HttpStatus.OK);
         } catch (Exception ex) {
-            return ServiceResult.failure("Error retrieving player meditation", ex);
+            return ServiceResult.failure("Error retrieving player meditation", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public ServiceResult<GetCultivationPointPerMinsResponse> getCultivationPointPerMins(UUID playerId){
-        if(playerId == null){
-            return ServiceResult.failure("PlayerId not found");
-        }
-        var cultivationPoint = calculateCultivationPointPerMinutes(playerId);
-        var data = new GetCultivationPointPerMinsResponse(cultivationPoint);
-        return ServiceResult.success("Get cp per minutes success",data);
     }
 
     public ServiceResult<Void> beginMeditate(UUID playerId, Integer durationMinutes){
@@ -86,7 +72,7 @@ public class PlayerMeditationService {
         var playerResult = playerService.getPlayerEntityById(playerId);
 
         if (!playerResult.isSuccess()) {
-            return ServiceResult.failure("Player not exists");
+            return ServiceResult.failure("Player not exists", HttpStatus.NOT_FOUND);
         }
 
         var player = playerResult.getData();
@@ -94,7 +80,7 @@ public class PlayerMeditationService {
         var existMediation = playerMeditationRepository.findByPlayer_IdAndIsClaimed(playerId, false);
 
         if (existMediation.isPresent()){
-            return ServiceResult.failure("Your mediation session already exists");
+            return ServiceResult.failure("Your mediation session already exists",  HttpStatus.CONFLICT);
         }
 
         var pointsPerMins = calculateCultivationPointPerMinutes(playerId);
@@ -119,22 +105,22 @@ public class PlayerMeditationService {
     public ServiceResult<Void> claimMeditate(UUID playerId){
 
         if(playerId == null) {
-            return ServiceResult.failure("Player not found");
+            return ServiceResult.failure("Player not found", HttpStatus.NOT_FOUND);
         }
         var playerOptional = playerRepository.findById(playerId);
         if(playerOptional.isEmpty()){
-            return ServiceResult.failure("Player not exists");
+            return ServiceResult.failure("Player not exists", HttpStatus.NOT_FOUND);
         }
         var player = playerOptional.get();
 
         var playerMeditationOptional = playerMeditationRepository.findByPlayer_IdAndIsClaimed(playerId, false);
         if(playerMeditationOptional.isEmpty()){
-            return ServiceResult.failure("Your mediation session are not exists");
+            return ServiceResult.failure("Your mediation session are not exists", HttpStatus.NOT_FOUND);
         }
         var playerMeditation = playerMeditationOptional.get();
 
         if(playerMeditation.getIsClaimed()){
-            return ServiceResult.failure("You already claimed the reward");
+            return ServiceResult.failure("You already claimed the reward", HttpStatus.CONFLICT);
         }
 
         playerMeditation.setIsClaimed(true);
@@ -143,7 +129,7 @@ public class PlayerMeditationService {
         playerMeditationRepository.save(playerMeditation);
         playerRepository.save(player);
 
-        return ServiceResult.success("Session claimed");
+        return ServiceResult.success("Session claimed", HttpStatus.OK);
     }
 
     private Long calculateCultivationPointPerMinutes(UUID playerId) {

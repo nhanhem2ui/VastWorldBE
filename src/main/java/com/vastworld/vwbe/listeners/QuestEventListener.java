@@ -1,11 +1,11 @@
 package com.vastworld.vwbe.listeners;
 
-import com.vastworld.vwbe.dto.listeners.PLayerLeveledUpEvent;
-import com.vastworld.vwbe.dto.listeners.PlayerTravelEvent;
-import com.vastworld.vwbe.dto.listeners.QuestCompletedEvent;
-import com.vastworld.vwbe.dto.listeners.QuestCompletedNotification;
+import com.vastworld.vwbe.dto.listener.PLayerLeveledUpEvent;
+import com.vastworld.vwbe.dto.listener.PlayerTravelEvent;
+import com.vastworld.vwbe.dto.listener.QuestCompletedEvent;
+import com.vastworld.vwbe.dto.listener.QuestCompletedNotification;
 import com.vastworld.vwbe.dto.playerinventory.AddToInventoryRequest;
-import com.vastworld.vwbe.entites.*;
+import com.vastworld.vwbe.entities.*;
 import com.vastworld.vwbe.enums.quests.PlayerQuestStatus;
 import com.vastworld.vwbe.repositories.*;
 import com.vastworld.vwbe.services.CultivationRealmService;

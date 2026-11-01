@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.MapDecoration;
+import com.vastworld.vwbe.entities.MapDecoration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

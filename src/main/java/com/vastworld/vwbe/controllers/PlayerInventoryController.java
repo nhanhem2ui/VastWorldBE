@@ -9,7 +9,6 @@ import com.vastworld.vwbe.security.AuthenticatedUser;
 import com.vastworld.vwbe.security.ratelimit.RateLimit;
 import com.vastworld.vwbe.services.PlayerInventoryService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,7 +21,7 @@ import static com.vastworld.vwbe.common.Common.resolveStatus;
 @RestController
 @RequestMapping("/api/player-inventories")
 @PreAuthorize("isAuthenticated()")
-@RateLimit(limit = 30)
+@RateLimit
 public class PlayerInventoryController {
     private final PlayerInventoryService playerInventoryService;
 
@@ -58,6 +57,7 @@ public class PlayerInventoryController {
         return ResponseEntity.status(resolveStatus(result, null)).body(result);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add")
     public ResponseEntity<ServiceResult<Void>> addPlayerInventory(Authentication authentication, @Valid @RequestBody AddToInventoryRequest request){
         var user = (AuthenticatedUser) authentication.getPrincipal();

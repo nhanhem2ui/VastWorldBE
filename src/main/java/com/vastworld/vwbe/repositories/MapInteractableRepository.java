@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.MapInteractable;
+import com.vastworld.vwbe.entities.MapInteractable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

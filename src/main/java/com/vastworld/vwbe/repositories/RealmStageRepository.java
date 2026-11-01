@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.RealmStage;
+import com.vastworld.vwbe.entities.RealmStage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

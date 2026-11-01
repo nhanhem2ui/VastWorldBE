@@ -5,7 +5,7 @@ import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.realmstage.GetRealmStageResponse;
 import com.vastworld.vwbe.dto.realmstage.RealmStageDTO;
-import com.vastworld.vwbe.entites.RealmStage;
+import com.vastworld.vwbe.entities.RealmStage;
 import com.vastworld.vwbe.repositories.RealmStageRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

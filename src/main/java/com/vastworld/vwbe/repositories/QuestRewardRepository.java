@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.QuestReward;
+import com.vastworld.vwbe.entities.QuestReward;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

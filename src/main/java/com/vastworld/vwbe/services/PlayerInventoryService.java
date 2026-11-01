@@ -3,10 +3,10 @@ package com.vastworld.vwbe.services;
 import com.vastworld.vwbe.common.GameBalance;
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.playerinventory.*;
-import com.vastworld.vwbe.entites.Item;
-import com.vastworld.vwbe.entites.Player;
-import com.vastworld.vwbe.entites.PlayerEquipment;
-import com.vastworld.vwbe.entites.PlayerInventory;
+import com.vastworld.vwbe.entities.Item;
+import com.vastworld.vwbe.entities.Player;
+import com.vastworld.vwbe.entities.PlayerEquipment;
+import com.vastworld.vwbe.entities.PlayerInventory;
 import com.vastworld.vwbe.enums.EquipmentSlotTypes;
 import com.vastworld.vwbe.repositories.ItemRepository;
 import com.vastworld.vwbe.repositories.PlayerEquipmentRepository;
@@ -100,6 +100,7 @@ public class PlayerInventoryService {
         }
     }
 
+    //NOTE: Increase number of accessory are possible
     public ServiceResult<List<GetEquipmentsResponse>> getPlayerEquipments(UUID playerId) {
         try {
             var playerEntityOptional = playerRepository.findById(playerId);
@@ -437,6 +438,7 @@ public class PlayerInventoryService {
                 return ServiceResult.failure("Player inventory not found", HttpStatus.NOT_FOUND);
             }
 
+            //exist
             for (var slot : playerInventory) {
                 if (slot.getItem() != null && slot.getItem().getId().equals(itemEntity.getId())) {
                     int currentQuantity = slot.getQuantity() == null ? 0 : slot.getQuantity();
@@ -449,6 +451,7 @@ public class PlayerInventoryService {
                 }
             }
 
+            //not exist
             for (var slot : playerInventory) {
                 if (slot.getItem() == null || slot.getQuantity() == null || slot.getQuantity() == 0) {
                     slot.setItem(itemEntity);

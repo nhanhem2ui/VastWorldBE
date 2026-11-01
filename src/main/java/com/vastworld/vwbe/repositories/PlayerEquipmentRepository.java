@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.PlayerEquipment;
+import com.vastworld.vwbe.entities.PlayerEquipment;
 import com.vastworld.vwbe.enums.EquipmentSlotTypes;
 import org.springframework.data.jpa.repository.JpaRepository;
 

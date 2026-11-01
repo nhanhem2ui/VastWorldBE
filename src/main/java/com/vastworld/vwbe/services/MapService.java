@@ -3,7 +3,7 @@ package com.vastworld.vwbe.services;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.vastworld.vwbe.common.CacheKeys;
 import com.vastworld.vwbe.dto.ServiceResult;
-import com.vastworld.vwbe.dto.listeners.PlayerTravelEvent;
+import com.vastworld.vwbe.dto.listener.PlayerTravelEvent;
 import com.vastworld.vwbe.dto.map.*;
 import com.vastworld.vwbe.repositories.*;
 import org.springframework.context.ApplicationEventPublisher;

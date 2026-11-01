@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.services;
 
-import com.vastworld.vwbe.entites.Account;
+import com.vastworld.vwbe.entities.Account;
 import com.vastworld.vwbe.repositories.PlayerRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

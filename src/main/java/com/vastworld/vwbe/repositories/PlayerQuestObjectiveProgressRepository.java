@@ -1,7 +1,7 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.PlayerQuest;
-import com.vastworld.vwbe.entites.PlayerQuestObjectiveProgress;
+import com.vastworld.vwbe.entities.PlayerQuest;
+import com.vastworld.vwbe.entities.PlayerQuestObjectiveProgress;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

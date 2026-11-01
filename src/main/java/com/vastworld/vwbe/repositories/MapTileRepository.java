@@ -1,6 +1,6 @@
 package com.vastworld.vwbe.repositories;
 
-import com.vastworld.vwbe.entites.MapTile;
+import com.vastworld.vwbe.entities.MapTile;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

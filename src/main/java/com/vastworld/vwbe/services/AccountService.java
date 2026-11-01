@@ -2,7 +2,7 @@ package com.vastworld.vwbe.services;
 
 import com.vastworld.vwbe.dto.ServiceResult;
 import com.vastworld.vwbe.dto.account.AccountDTO;
-import com.vastworld.vwbe.entites.Account;
+import com.vastworld.vwbe.entities.Account;
 import com.vastworld.vwbe.repositories.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
